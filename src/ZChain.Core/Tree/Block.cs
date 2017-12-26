@@ -57,6 +57,11 @@ namespace ZChain.Core.Tree
 
         public void MineBlock()
         {
+            if (State != BlockState.New)
+            {
+                throw new Exception("Cannot remine a block");
+            }
+
             State = BlockState.Mining;
             
             var hashStart = new string('0', Difficulty);
