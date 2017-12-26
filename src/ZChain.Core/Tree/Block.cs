@@ -97,9 +97,11 @@ namespace ZChain.Core.Tree
             stringBuilder.Append(blockToHash.IterationsToMinedResult);
 
             var byteEncodedString = Encoding.UTF8.GetBytes(stringBuilder.ToString());
-            var hasher = SHA256.Create();
-            var hash = hasher.ComputeHash(byteEncodedString);
-            return BitConverter.ToString(hash).Replace("-", "");
+            using (var hasher = SHA256.Create())
+            {
+                var hash = hasher.ComputeHash(byteEncodedString);
+                return BitConverter.ToString(hash).Replace("-", "");
+            }
         }
     }
 }
