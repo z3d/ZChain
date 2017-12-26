@@ -22,6 +22,7 @@ namespace ZChain.Core.Tree
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
             Parent = parent;
+            ParentHash = parent.Hash;
             Height = parent.Height + 1;
         }
 
@@ -46,6 +47,7 @@ namespace ZChain.Core.Tree
         public int IterationsToMinedResult { get; private set; }
 
         public string Hash { get; private set; }
+        public string ParentHash { get; private set; }
 
         public string Nonce { get; private set; }
 
@@ -98,6 +100,11 @@ namespace ZChain.Core.Tree
             if (blockToVerify.State != BlockState.Mined)
             {
                 throw new Exception($"Invalid block state at height: {blockToVerify.Height} with hash: {blockToVerify.Hash}");
+            }
+
+            if (blockToVerify.Parent?.Hash != blockToVerify.ParentHash)
+            {
+                throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent.Hash}");
             }
 
             return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
