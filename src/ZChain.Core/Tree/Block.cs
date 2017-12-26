@@ -54,11 +54,9 @@ namespace ZChain.Core.Tree
 
         public long Height { get; private set; }
 
-
         public void MineBlock()
         {
             State = BlockState.Mining;
-            
             
             var hashStart = new string('0', Difficulty);
             ReceivedDate = DateTimeOffset.Now;
