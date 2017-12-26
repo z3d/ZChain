@@ -48,6 +48,8 @@ namespace ZChain.Core.Tree
 
         public string Nonce { get; private set; }
 
+        public DateTimeOffset ReceivedDate { get; private set; }
+
         public DateTimeOffset MinedDate { get; private set; }
 
         public long Height { get; private set; }
@@ -56,14 +58,15 @@ namespace ZChain.Core.Tree
         public void MineBlock()
         {
             State = BlockState.Mining;
-            MinedDate = DateTimeOffset.Now;
+            
             
             var hashStart = new string('0', Difficulty);
-
+            ReceivedDate = DateTimeOffset.Now;
             while (!Hash.StartsWith(hashStart))
             {
                 ++IterationsToMinedResult;
                 Nonce = GenerateNonce();
+                MinedDate = DateTimeOffset.Now;
                 Hash = HashBlock(this);
             }
             State = BlockState.Mined;
@@ -72,7 +75,7 @@ namespace ZChain.Core.Tree
         public override string ToString()
         {
             return
-                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} Nonce: {Nonce} Difficulty: {Difficulty} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}";
+                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {ReceivedDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}";
         }
 
         private string GenerateNonce()
