@@ -104,7 +104,7 @@ namespace ZChain.Core.Tree
 
             if (blockToVerify.Parent?.Hash != blockToVerify.ParentHash)
             {
-                throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent.Hash}");
+                throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent?.Hash}");
             }
 
             return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
