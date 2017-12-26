@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -81,8 +82,19 @@ namespace ZChain.Core.Tree
             return Guid.NewGuid().ToString("N");
         }
 
-        public static bool VerifyHash(Block blockToVerify)
+        public static bool Verify(Block blockToVerify)
         {
+            if (blockToVerify.Height != 0)
+            {
+                Verify(blockToVerify.Parent);
+            }
+            Debug.WriteLine($"Verifying block at height {blockToVerify.Height}");
+
+            if (blockToVerify.State != BlockState.Mined)
+            {
+                throw new Exception($"Invalid block state at height: {blockToVerify.Height} with hash: {blockToVerify.Hash}");
+            }
+
             return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
         }
 
