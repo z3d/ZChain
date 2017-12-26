@@ -21,7 +21,8 @@ namespace ZChain.Core.Tree
 
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
-            Parent = parent;
+            Parent = parent ?? throw new ArgumentNullException(
+                         $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
             ParentHash = parent.Hash;
             Height = parent.Height + 1;
         }
@@ -76,6 +77,7 @@ namespace ZChain.Core.Tree
                 Hash = HashBlock(this);
             }
             State = BlockState.Mined;
+            Verify(this);
         }
 
         public override string ToString()
@@ -94,6 +96,13 @@ namespace ZChain.Core.Tree
             if (blockToVerify.Height != 0)
             {
                 Verify(blockToVerify.Parent);
+            }
+            else
+            {
+                if (blockToVerify.Hash != new string('0', 32))
+                {
+                    throw new Exception($"Root block hash incorrect");
+                }
             }
             Debug.WriteLine($"Verifying block at height {blockToVerify.Height}");
 
