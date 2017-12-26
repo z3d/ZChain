@@ -82,7 +82,7 @@ namespace ZChain.Core.Tree
 
         public static bool VerifyHash(Block blockToVerify)
         {
-            return blockToVerify.Level == 0|| HashBlock(blockToVerify) == blockToVerify.Hash;
+            return blockToVerify.Level == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
         }
 
         private static string HashBlock(Block blockToHash)
