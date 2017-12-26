@@ -90,9 +90,15 @@ namespace ZChain.Core.Tree
 
         private static string HashBlock(Block blockToHash)
         {
-            var combinedString = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash + blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks + blockToHash.IterationsToMinedResult;
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append(blockToHash.Nonce);
+            stringBuilder.Append(blockToHash.Height);
+            stringBuilder.Append(blockToHash.Parent?.Hash);
+            stringBuilder.Append(blockToHash.RecordedTransaction);
+            stringBuilder.Append(blockToHash.MinedDate.UtcTicks);
+            stringBuilder.Append(blockToHash.IterationsToMinedResult);
 
-            var byteEncodedString = Encoding.UTF8.GetBytes(combinedString);
+            var byteEncodedString = Encoding.UTF8.GetBytes(stringBuilder.ToString());
             var hasher = SHA256.Create();
             var hash = hasher.ComputeHash(byteEncodedString);
             return BitConverter.ToString(hash).Replace("-", "");
