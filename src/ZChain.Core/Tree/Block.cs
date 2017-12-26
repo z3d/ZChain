@@ -12,7 +12,7 @@ namespace ZChain.Core.Tree
             {
                 Hash = new string('0', 32),
                 Parent = null,
-                Level = 0
+                Height = 0
             };
 
             return genesisBlock;
@@ -21,7 +21,7 @@ namespace ZChain.Core.Tree
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
             Parent = parent;
-            Level = parent.Level + 1;
+            Height = parent.Height + 1;
         }
 
         private Block(ITransaction recordedTransaction, int difficulty)
@@ -50,7 +50,7 @@ namespace ZChain.Core.Tree
 
         public DateTimeOffset MinedDate { get; private set; }
 
-        public long Level { get; private set; }
+        public long Height { get; private set; }
 
 
         public void MineBlock()
@@ -72,7 +72,7 @@ namespace ZChain.Core.Tree
         public override string ToString()
         {
             return
-                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Level: {Level} Transaction: {RecordedTransaction} Nonce: {Nonce} Difficulty: {Difficulty} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}";
+                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} Nonce: {Nonce} Difficulty: {Difficulty} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}";
         }
 
         private string GenerateNonce()
@@ -82,12 +82,12 @@ namespace ZChain.Core.Tree
 
         public static bool VerifyHash(Block blockToVerify)
         {
-            return blockToVerify.Level == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
+            return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
         }
 
         private static string HashBlock(Block blockToHash)
         {
-            var combinedString = blockToHash.Nonce + blockToHash.Level + blockToHash.Parent?.Hash + blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks + blockToHash.IterationsToMinedResult;
+            var combinedString = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash + blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks + blockToHash.IterationsToMinedResult;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(combinedString);
             var hasher = SHA256.Create();
