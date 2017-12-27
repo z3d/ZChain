@@ -9,14 +9,12 @@ namespace ZChain.Core.Tree
     {
         public static Block CreateGenesisBlock(ITransaction recordedTransaction, int difficulty)
         {
-            var genesisBlock = new Block(recordedTransaction, difficulty)
+            return new Block(recordedTransaction, difficulty)
             {
                 Hash = new string('0', 32),
                 Parent = null,
                 Height = 0
             };
-
-            return genesisBlock;
         }
 
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
