@@ -65,9 +65,9 @@ namespace ZChain.Core.Tree
 
             State = BlockState.Mining;
             
-            var hashStart = new string('0', Difficulty);
+            var targetHashStart = new string('0', Difficulty);
             ReceivedDate = DateTimeOffset.Now;
-            while (!Hash.StartsWith(hashStart))
+            while (!Hash.StartsWith(targetHashStart))
             {
                 ++IterationsToMinedResult;
                 Nonce = GenerateNonce();
