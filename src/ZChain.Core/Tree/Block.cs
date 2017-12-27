@@ -119,15 +119,11 @@ namespace ZChain.Core.Tree
 
         private static string HashBlock(Block blockToHash)
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(blockToHash.Nonce);
-            stringBuilder.Append(blockToHash.Height);
-            stringBuilder.Append(blockToHash.Parent?.Hash);
-            stringBuilder.Append(blockToHash.RecordedTransaction);
-            stringBuilder.Append(blockToHash.MinedDate.UtcTicks);
-            stringBuilder.Append(blockToHash.IterationsToMinedResult);
+            var block = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash +
+                        blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks +
+                        blockToHash.IterationsToMinedResult; 
 
-            var byteEncodedString = Encoding.UTF8.GetBytes(stringBuilder.ToString());
+            var byteEncodedString = Encoding.UTF8.GetBytes(block);
             using (var hasher = SHA256.Create())
             {
                 var hash = hasher.ComputeHash(byteEncodedString);
