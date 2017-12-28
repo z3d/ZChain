@@ -126,7 +126,7 @@ namespace ZChain.Core.Tree
         {
             var block = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash +
                         blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks +
-                        blockToHash.IterationsToMinedResult; 
+                        blockToHash.IterationsToMinedResult + blockToHash.Difficulty;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(block);
             using (var hasher = SHA256.Create())
