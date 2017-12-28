@@ -114,6 +114,11 @@ namespace ZChain.Core.Tree
                 throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent?.Hash}");
             }
 
+            if (!blockToVerify.Hash.StartsWith(new string('0', blockToVerify.Difficulty)))
+            {
+                throw new Exception($"Block format incorrect. Does not start with {blockToVerify.Difficulty} characters");
+            }
+
             return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
         }
 
