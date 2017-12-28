@@ -29,7 +29,7 @@ namespace ZChain.Core.Tree
         {
             if(difficulty <= 0)
             {
-                throw new Exception("Difficulty must exceed 1");
+                throw new Exception("Difficulty must exceed 0");
             }
 
             RecordedTransaction = recordedTransaction;
@@ -99,7 +99,7 @@ namespace ZChain.Core.Tree
             {
                 if (blockToVerify.Hash != new string('0', 32))
                 {
-                    throw new Exception($"Root block hash incorrect");
+                    throw new Exception($"Genesis block hash incorrect");
                 }
             }
             Debug.WriteLine($"Verifying block at height {blockToVerify.Height}");
