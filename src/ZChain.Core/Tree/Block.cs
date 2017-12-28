@@ -124,11 +124,11 @@ namespace ZChain.Core.Tree
 
         private static string HashBlock(Block blockToHash)
         {
-            var block = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash +
+            var blockString = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash +
                         blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks +
                         blockToHash.IterationsToMinedResult + blockToHash.Difficulty;
 
-            var byteEncodedString = Encoding.UTF8.GetBytes(block);
+            var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
             using (var hasher = SHA256.Create())
             {
                 var hash = hasher.ComputeHash(byteEncodedString);
