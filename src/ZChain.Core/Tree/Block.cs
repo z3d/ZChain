@@ -7,11 +7,13 @@ namespace ZChain.Core.Tree
 {
     public class Block
     {
+        private static readonly char BufferCharacter = '0';
+
         public static Block CreateGenesisBlock(ITransaction recordedTransaction, int difficulty)
         {
             return new Block(recordedTransaction, difficulty)
             {
-                Hash = new string('0', 32),
+                Hash = new string(BufferCharacter, 32),
                 Parent = null,
                 Height = 0
             };
@@ -65,7 +67,7 @@ namespace ZChain.Core.Tree
 
             State = BlockState.Mining;
             
-            var targetHashStart = new string('0', Difficulty);
+            var targetHashStart = new string(BufferCharacter, Difficulty);
             ReceivedDate = DateTimeOffset.Now;
             while (!Hash.StartsWith(targetHashStart))
             {
@@ -97,7 +99,7 @@ namespace ZChain.Core.Tree
             }
             else
             {
-                if (blockToVerify.Hash != new string('0', 32))
+                if (blockToVerify.Hash != new string(BufferCharacter, 32))
                 {
                     throw new Exception($"Genesis block hash incorrect");
                 }
@@ -114,7 +116,7 @@ namespace ZChain.Core.Tree
                 throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent?.Hash}");
             }
 
-            if (!blockToVerify.Hash.StartsWith(new string('0', blockToVerify.Difficulty)))
+            if (!blockToVerify.Hash.StartsWith(new string(BufferCharacter, blockToVerify.Difficulty)))
             {
                 throw new Exception($"Block format incorrect. Does not start with {blockToVerify.Difficulty} characters");
             }
