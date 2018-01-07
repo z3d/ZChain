@@ -91,19 +91,23 @@ namespace ZChain.Core.Tree
             return Guid.NewGuid().ToString("N");
         }
 
-        public static bool Verify(Block blockToVerify)
+        public bool Verify()
+        {
+            return Verify(this);
+        }
+
+        private static bool Verify(Block blockToVerify)
         {
             if (blockToVerify.Height != 0)
             {
                 Verify(blockToVerify.Parent);
             }
-            else
+
+            else if (blockToVerify.Hash != new string(BufferCharacter, 32))
             {
-                if (blockToVerify.Hash != new string(BufferCharacter, 32))
-                {
-                    throw new Exception($"Genesis block hash incorrect");
-                }
+                throw new Exception($"Genesis block hash incorrect");
             }
+            
             Debug.WriteLine($"Verifying block at height {blockToVerify.Height}");
 
             if (blockToVerify.State != BlockState.Mined)
