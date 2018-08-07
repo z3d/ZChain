@@ -8,8 +8,8 @@ namespace ZChain
     {
         static void Main()
         {
-            var threads = 1;
-            var difficulty = 6;
+            var threads = 11;
+            var difficulty = 8;
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block.CreateGenesisBlock(new Transaction("First_Address", "Second_Address", 300), difficulty);
