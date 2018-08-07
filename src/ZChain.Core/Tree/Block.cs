@@ -83,7 +83,9 @@ namespace ZChain.Core.Tree
         public override string ToString()
         {
             return
-                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {ReceivedDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}";
+                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} " +
+                $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {ReceivedDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}, " +
+                $" Seconds to hash result: {(MinedDate - ReceivedDate).Seconds}. Hashes per second: {IterationsToMinedResult/(MinedDate - ReceivedDate).Seconds}.";
         }
 
         private string GenerateNonce()
