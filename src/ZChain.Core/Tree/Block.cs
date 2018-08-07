@@ -79,7 +79,7 @@ namespace ZChain.Core.Tree
                     ++iterations;
                     nonce = GenerateNonce();
                     minedDate = DateTimeOffset.Now;
-                    hash = HashBlock(nonce, Height, Parent, RecordedTransaction, minedDate, iterations, Difficulty);
+                    hash = CalculateHash(nonce, Height, Parent, RecordedTransaction, minedDate, iterations, Difficulty);
                 }
 
                 if (_cts.IsCancellationRequested)
@@ -180,19 +180,12 @@ namespace ZChain.Core.Tree
 
         private static string HashBlock(Block blockToHash)
         {
-            var blockString = blockToHash.Nonce + blockToHash.Height + blockToHash.Parent?.Hash +
-                        blockToHash.RecordedTransaction + blockToHash.MinedDate.UtcTicks +
-                        blockToHash.IterationsToMinedResult + blockToHash.Difficulty;
-
-            var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
-            using (var hasher = SHA256.Create())
-            {
-                var hash = hasher.ComputeHash(byteEncodedString);
-                return BitConverter.ToString(hash).Replace("-", "");
-            }
+            return CalculateHash(blockToHash.Nonce, blockToHash.Height, blockToHash.Parent,
+                blockToHash.RecordedTransaction, blockToHash.MinedDate, blockToHash.IterationsToMinedResult,
+                blockToHash.Difficulty);
         }
 
-        private static string HashBlock(string nonce, long height, Block parent, ITransaction recordedTransaction, DateTimeOffset minedDate, int iterationsToMinedResult, int difficulty)
+        private static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, DateTimeOffset minedDate, int iterationsToMinedResult, int difficulty)
         {
             var blockString = nonce + height + parent?.Hash +
                               recordedTransaction + minedDate.UtcTicks +
