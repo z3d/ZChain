@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ZChain.Core.Tree
 {
     public class Block
     {
         private static readonly char BufferCharacter = '0';
+        CancellationTokenSource _cts;
 
         public static Block CreateGenesisBlock(ITransaction recordedTransaction, int difficulty)
         {
@@ -21,6 +26,8 @@ namespace ZChain.Core.Tree
 
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
+            _cts = new CancellationTokenSource();
+
             Parent = parent ?? throw new ArgumentNullException(
                          $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
             ParentHash = parent.Hash;
@@ -58,24 +65,65 @@ namespace ZChain.Core.Tree
 
         public long Height { get; private set; }
 
-        public void MineBlock()
+        public void MineBlock(int numberOfThreads = 1)
         {
+            void Mine(string hashStart)
+            {
+                var iterations = 0;
+                var nonce = string.Empty;
+                var minedDate = DateTimeOffset.Now;
+                var hash = string.Empty;
+
+                while (!hash.StartsWith(hashStart) && !_cts.IsCancellationRequested)
+                {
+                    ++iterations;
+                    nonce = GenerateNonce();
+                    minedDate = DateTimeOffset.Now;
+                    hash = HashBlock(nonce, Height, Parent, RecordedTransaction, minedDate, iterations, Difficulty);
+                }
+
+                if (_cts.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                _cts?.Cancel();
+
+                IterationsToMinedResult = iterations;
+                Nonce = nonce;
+                MinedDate = minedDate;
+                Hash = hash;
+            }
+
             if (State != BlockState.New)
             {
                 throw new Exception("Cannot remine a block");
             }
 
             State = BlockState.Mining;
-            
             var targetHashStart = new string(BufferCharacter, Difficulty);
             ReceivedDate = DateTimeOffset.Now;
-            while (!Hash.StartsWith(targetHashStart))
+
+            if (Height != 0)
             {
-                ++IterationsToMinedResult;
-                Nonce = GenerateNonce();
-                MinedDate = DateTimeOffset.Now;
-                Hash = HashBlock(this);
+                var token = _cts.Token;
+
+                var tasks = new List<Task>();
+
+
+                for (int i = 0; i < numberOfThreads; i++)
+                {
+                    tasks.Add(new Task(() => Mine(targetHashStart), token));
+                }
+
+                foreach (var t in tasks)
+                {
+                   t.Start();
+                }
+
+                Task.WaitAll(tasks.ToArray());
             }
+
             State = BlockState.Mined;
             Verify(this);
         }
@@ -85,7 +133,7 @@ namespace ZChain.Core.Tree
             return
                 $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} " +
                 $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {ReceivedDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}, " +
-                $" Seconds to hash result: {(MinedDate - ReceivedDate).Seconds}. Hashes per second: {IterationsToMinedResult/(MinedDate - ReceivedDate).Seconds}.";
+                $" Seconds to hash result: {(MinedDate - ReceivedDate).TotalSeconds}";
         }
 
         private string GenerateNonce()
@@ -143,5 +191,20 @@ namespace ZChain.Core.Tree
                 return BitConverter.ToString(hash).Replace("-", "");
             }
         }
+
+        private static string HashBlock(string nonce, long height, Block parent, ITransaction recordedTransaction, DateTimeOffset minedDate, int iterationsToMinedResult, int difficulty)
+        {
+            var blockString = nonce + height + parent?.Hash +
+                              recordedTransaction + minedDate.UtcTicks +
+                              iterationsToMinedResult + difficulty;
+
+            var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
+            using (var hasher = SHA256.Create())
+            {
+                var hash = hasher.ComputeHash(byteEncodedString);
+                return BitConverter.ToString(hash).Replace("-", "");
+            }
+        }
+
     }
 }
