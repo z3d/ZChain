@@ -12,7 +12,23 @@ namespace ZChain.Core.Tree
     public class Block
     {
         private static readonly char BufferCharacter = '0';
-        CancellationTokenSource _cts;
+        private readonly CancellationTokenSource _cts;
+
+        public Block Parent { get; private set; }
+        public ITransaction RecordedTransaction { get; private set; }
+        public int Difficulty { get; private set; }
+        public BlockState State { get; private set; }
+        public int IterationsToMinedResult { get; private set; }
+        public string Hash { get; private set; }
+        public string ParentHash { get; private set; }
+
+        public string Nonce { get; private set; }
+
+        public DateTimeOffset ReceivedDate { get; private set; }
+
+        public DateTimeOffset MinedDate { get; private set; }
+
+        public long Height { get; private set; }
 
         public static Block CreateGenesisBlock(ITransaction recordedTransaction, int difficulty)
         {
@@ -47,23 +63,6 @@ namespace ZChain.Core.Tree
             Hash = "NEW_BLOCK";
             IterationsToMinedResult = 0;
         }
-
-        public Block Parent { get; private set; }
-        public ITransaction RecordedTransaction { get; private set; }
-        public int Difficulty { get; private set; }
-        public BlockState State { get; private set; }
-        public int IterationsToMinedResult { get; private set; }
-
-        public string Hash { get; private set; }
-        public string ParentHash { get; private set; }
-
-        public string Nonce { get; private set; }
-
-        public DateTimeOffset ReceivedDate { get; private set; }
-
-        public DateTimeOffset MinedDate { get; private set; }
-
-        public long Height { get; private set; }
 
         public void MineBlock(int numberOfThreads = 1)
         {
