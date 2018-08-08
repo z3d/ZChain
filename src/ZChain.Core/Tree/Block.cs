@@ -123,6 +123,10 @@ namespace ZChain.Core.Tree
 
                 Task.WaitAll(tasks.ToArray());
             }
+            else
+            {
+                MinedDate = DateTimeOffset.Now;
+            }
 
             State = BlockState.Mined;
             Verify(this);
