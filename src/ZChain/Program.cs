@@ -8,8 +8,8 @@ namespace ZChain
     {
         static void Main()
         {
-            var threads = 11;
-            var difficulty = 8;
+            var threads = 10;
+            var difficulty = 6;
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block.CreateGenesisBlock(new Transaction("First_Address", "Second_Address", 300), difficulty);
@@ -33,6 +33,36 @@ namespace ZChain
             fourthBlock.MineBlock(threads);
             Console.WriteLine(fourthBlock);
             Console.WriteLine($"Verified: {fourthBlock.Verify()}");
+
+            var fifthBlock = new Block(fourthBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            fifthBlock.MineBlock(threads);
+            Console.WriteLine(fifthBlock);
+            Console.WriteLine($"Verified: {fifthBlock.Verify()}");
+
+            var sixthBlock = new Block(fifthBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            sixthBlock.MineBlock(threads);
+            Console.WriteLine(sixthBlock);
+            Console.WriteLine($"Verified: {sixthBlock.Verify()}");
+
+            var seventhBlock = new Block(sixthBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            seventhBlock.MineBlock(threads);
+            Console.WriteLine(seventhBlock);
+            Console.WriteLine($"Verified: {seventhBlock.Verify()}");
+
+            var éighthBlock = new Block(seventhBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            éighthBlock.MineBlock(threads);
+            Console.WriteLine(éighthBlock);
+            Console.WriteLine($"Verified: {éighthBlock.Verify()}");
+
+            var ninthBlock = new Block(éighthBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            ninthBlock.MineBlock(threads);
+            Console.WriteLine(ninthBlock);
+            Console.WriteLine($"Verified: {ninthBlock.Verify()}");
+
+            var tenthBlock = new Block(ninthBlock, new Transaction("FourthAddress", "ThirdAddress", 20), difficulty);
+            tenthBlock.MineBlock(threads);
+            Console.WriteLine(tenthBlock);
+            Console.WriteLine($"Verified: {tenthBlock.Verify()}");
 
             stopwatch.Stop();
             Console.WriteLine(stopwatch.ElapsedMilliseconds/1000);
