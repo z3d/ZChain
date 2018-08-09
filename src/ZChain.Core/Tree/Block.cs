@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -120,7 +119,7 @@ namespace ZChain.Core.Tree
                    t.Start();
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                Task.WaitAny(tasks.ToArray());
             }
             else
             {
