@@ -20,7 +20,6 @@ namespace ZChain.Tests.Integration
             genesisBlock.Parent.ShouldBeNull();
             genesisBlock.Height.ShouldBe(0);
             genesisBlock.IterationsToMinedResult.ShouldBe(0);
-            genesisBlock.MinedDate.ShouldBeGreaterThan(new DateTimeOffset());
             genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
             genesisBlock.State.ShouldBe(BlockState.Mined);
 
@@ -31,7 +30,6 @@ namespace ZChain.Tests.Integration
             secondBlock.Verify().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
             secondBlock.Height.ShouldBe(1);
-            secondBlock.MinedDate.ShouldBeGreaterThan(secondBlock.BeginMiningDate);
             secondBlock.ParentHash.ShouldBe(genesisBlock.Hash);
             secondBlock.State.ShouldBe(BlockState.Mined);
 
@@ -42,10 +40,8 @@ namespace ZChain.Tests.Integration
             thirdBlock.Verify().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
             thirdBlock.Height.ShouldBe(2);
-            thirdBlock.MinedDate.ShouldBeGreaterThan(thirdBlock.BeginMiningDate);
             thirdBlock.ParentHash.ShouldBe(secondBlock.Hash);
             thirdBlock.State.ShouldBe(BlockState.Mined);
         }
-
     }
 }
