@@ -59,7 +59,7 @@ namespace ZChain.Core.Tree
             }
 
             cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
-            throw new Exception("Should never reach here");
+            throw new InvalidOperationException("Unreachable code reached");
         }
     }
 }
