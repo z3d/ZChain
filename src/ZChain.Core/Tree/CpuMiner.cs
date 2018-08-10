@@ -9,10 +9,12 @@ namespace ZChain.Core.Tree
     public class CpuMiner : IMiner
     {
         private readonly int _numberOfThreads;
+        private readonly object _lockObject;
 
         public CpuMiner(int numberOfThreads)
         {
             _numberOfThreads = numberOfThreads;
+            _lockObject = new object();
         }
 
         public Block MineBlock(Block blockToMine)
@@ -36,7 +38,7 @@ namespace ZChain.Core.Tree
                     ++iterations;
                     nonce = GenerateNonce();
                     minedDate = DateTimeOffset.Now;
-                    hash = BlockExtensions.CalculateHash(nonce, blockToMine.Height,blockToMine.Parent,blockToMine.RecordedTransaction,
+                    hash = Block.CalculateHash(nonce, blockToMine.Height,blockToMine.Parent,blockToMine.RecordedTransaction,
                         minedDate, iterations, blockToMine.Difficulty);
                 }
 
@@ -47,7 +49,10 @@ namespace ZChain.Core.Tree
 
                 cts.Cancel();
 
-                blockToMine.SetMinedValues(iterations, nonce, minedDate, hash);
+                lock (_lockObject)
+                {
+                    blockToMine.SetMinedValues(iterations, nonce, minedDate, hash);
+                }
             }
 
             var targetHashStart = new string(Block.DefaultBufferCharacter, blockToMine.Difficulty);
@@ -67,7 +72,7 @@ namespace ZChain.Core.Tree
                 t.Start();
             }
 
-            Task.WaitAny(tasks.ToArray());
+            Task.WaitAll(tasks.ToArray());
             blockToMine.Verify();
 
             return blockToMine;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -63,6 +64,7 @@ namespace ZChain.Core.Tree
            MinedDate = minedDate;
            Hash = hash;
            State = BlockState.Mined;
+           Verify();
         }
 
         public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
@@ -94,5 +96,58 @@ namespace ZChain.Core.Tree
                 $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}, " +
                 $" Seconds to hash result: {(MinedDate - BeginMiningDate).TotalSeconds}";
         }
+
+        public static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, DateTimeOffset minedDate, int iterationsToMinedResult, int difficulty)
+        {
+            var blockString = nonce + height + parent?.Hash +
+                              recordedTransaction + minedDate.UtcTicks +
+                              iterationsToMinedResult + difficulty;
+
+            var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
+            using (var hasher = SHA256.Create())
+            {
+                var hash = hasher.ComputeHash(byteEncodedString);
+                return BitConverter.ToString(hash).Replace("-", "");
+            }
+        }
+
+        public bool Verify(char bufferCharacter = Block.DefaultBufferCharacter)
+        {
+            string HashBlock()
+            {
+                return CalculateHash(Nonce, Height, Parent,
+                    RecordedTransaction, MinedDate, IterationsToMinedResult,
+                    Difficulty);
+            }
+
+            if (Height != 0)
+            {
+                Parent.Verify(bufferCharacter); // Recursively verify chain
+            }
+            else if (Hash != new string(bufferCharacter, 32))
+            {
+                throw new Exception($"Genesis block hash incorrect");
+            }
+
+            Debug.WriteLine($"Verifying block at height {Height}");
+
+            if (State != BlockState.Mined)
+            {
+                throw new Exception($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
+            }
+
+            if (Parent?.Hash != ParentHash)
+            {
+                throw new Exception($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
+            }
+
+            if (!Hash.StartsWith(new string(bufferCharacter, Difficulty)))
+            {
+                throw new Exception($"Block format incorrect. Does not start with {Difficulty} characters");
+            }
+
+            return Height == 0 || HashBlock() == Hash;
+        }
+
     }
 }
