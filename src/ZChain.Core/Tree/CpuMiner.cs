@@ -1,35 +1,25 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ZChain.Core.Tree
 {
-    public class CpuMiner : IMiner
+    public static class CpuMiner
     {
-        private readonly int _numberOfThreads;
-        private readonly Block _blockToMine;
-        private readonly CancellationTokenSource _cancellationTokenSource;
-        private readonly object _lockObject;
-
-        public CpuMiner(int numberOfThreads, Block blockToMine)
+        public static async Task<Block> MineBlock(int numberOfThreads, Block blockToMine)
         {
-            _numberOfThreads = numberOfThreads;
-            _blockToMine = blockToMine;
-            _cancellationTokenSource = new CancellationTokenSource();
-            _lockObject = new object();
-        }
+            var cancellationTokenSource = new CancellationTokenSource();
+            var targetHashStart = new string(Block.DefaultBufferCharacter, blockToMine.Difficulty);
 
-        public async Task<Block> MineBlock()
-        {
-            var targetHashStart = new string(Block.DefaultBufferCharacter, _blockToMine.Difficulty);
+            var tasks = new ConcurrentBag<Task<(string, string)>> ();
 
-            var tasks = new List<Task<(string, string)>>();
-
-            _blockToMine.SetMiningBeginning();
-            for (int i = 0; i < _numberOfThreads; i++)
+            blockToMine.SetMiningBeginning();
+            for (int i = 0; i < numberOfThreads; i++)
             {
-                tasks.Add(new Task<(string,string)>(() => Mine(targetHashStart, _blockToMine, _cancellationTokenSource.Token)));
+                var task = new Task<(string, string)>(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
+                tasks.Add(task);
             }
 
             foreach (var task in tasks)
@@ -38,37 +28,38 @@ namespace ZChain.Core.Tree
             }
            
             var completedTask = await Task.WhenAny(tasks);
-            var (nonce, hash) = await completedTask;
-            if (hash == null || nonce == null)
-            {
-                throw new Exception($"{nameof(hash)} is {hash} ");
-            }
-            _blockToMine.SetMinedValues(nonce, hash);
-            _blockToMine.Verify();
+            cancellationTokenSource.Cancel();
 
-            return _blockToMine;
+            var (nonce, hash) = await completedTask;
+            
+            blockToMine.SetMinedValues(nonce, hash);
+            blockToMine.Verify();
+
+            return blockToMine;
         }
 
-        private (string nonce, string hash) Mine(string hashStart, Block block, CancellationToken token)
+        private static (string nonce, string hash) Mine(string hashStart, Block block, CancellationToken cancellationToken)
         {
             string GenerateNonce() => Guid.NewGuid().ToString("N");
             var hash = string.Empty;
-
-            while (!hash.StartsWith(hashStart) && !_cancellationTokenSource.IsCancellationRequested)
+            
+            while (!hash.StartsWith(hashStart))
             {
+
                 var nonce = GenerateNonce();
                 hash = Block.CalculateHash(nonce, block.Height, block.Parent,
                     block.RecordedTransaction,
                     block.Difficulty);
 
+                cancellationToken.ThrowIfCancellationRequested();
                 if (hash.StartsWith(hashStart))
                 {
                     return (nonce, hash);
                 }
             }
 
-            token.ThrowIfCancellationRequested();
-            return (null, null);
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new Exception("Should never reach here");
         }
     }
 }
