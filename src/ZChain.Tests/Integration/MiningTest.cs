@@ -24,8 +24,7 @@ namespace ZChain.Tests.Integration
 
             var secondBlock = new Block(genesisBlock, new Transaction("Second_Address", "Third_Address", 200), difficulty);
             secondBlock.State.ShouldBe(BlockState.New);
-            IMiner secondBlockMiner = new CpuMiner(threads, secondBlock);
-            await secondBlockMiner.MineBlock();
+            await CpuMiner.MineBlock(threads, secondBlock);
             secondBlock.Verify().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
             secondBlock.Height.ShouldBe(1);
@@ -34,8 +33,7 @@ namespace ZChain.Tests.Integration
 
             var thirdBlock = new Block(secondBlock, new Transaction("ThirdAddress", "FourthAddress", 100), difficulty);
             thirdBlock.State.ShouldBe(BlockState.New);
-            IMiner thirdBlockMiner = new CpuMiner(threads, thirdBlock);
-            await thirdBlockMiner.MineBlock();
+            await CpuMiner.MineBlock(threads, thirdBlock);
             thirdBlock.Verify().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
             thirdBlock.Height.ShouldBe(2);
