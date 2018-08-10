@@ -41,6 +41,7 @@ namespace ZChain.Core.Tree
             }
 
             Task.WaitAll(tasks.ToArray());
+
             _blockToMine.Verify();
 
             return _blockToMine;
@@ -51,24 +52,21 @@ namespace ZChain.Core.Tree
             string GenerateNonce() => Guid.NewGuid().ToString("N");
 
             var iterations = 0;
-            var nonce = string.Empty;
-            var minedDate = DateTimeOffset.Now;
             var hash = string.Empty;
 
             while (!hash.StartsWith(hashStart) && !_cancellationTokenSource.IsCancellationRequested)
             {
                 ++iterations;
-                nonce = GenerateNonce();
-                minedDate = DateTimeOffset.Now;
+                var nonce = GenerateNonce();
                 hash = Block.CalculateHash(nonce, _blockToMine.Height, _blockToMine.Parent, _blockToMine.RecordedTransaction,
-                    minedDate, iterations, _blockToMine.Difficulty);
+                    iterations, _blockToMine.Difficulty);
 
                 if (hash.StartsWith(hashStart))
                 {
                     _cancellationTokenSource.Cancel();
                     lock (_lockObject)
                     {
-                        _blockToMine.SetMinedValues(iterations, nonce, minedDate, hash);
+                        _blockToMine.SetMinedValues(iterations, nonce, hash);
                     }
 
                     return;
