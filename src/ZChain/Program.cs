@@ -8,15 +8,14 @@ namespace ZChain
     {
         static void Main()
         {
-            var threads = 1;
-            var difficulty = 1;
+            var threads = 10;
+            var difficulty = 6;
 
             IMiner miner = new CpuMiner(threads);
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block.CreateGenesisBlock(new Transaction("First_Address", "Second_Address", 300));
             Console.WriteLine(genesisBlock);
-            Console.WriteLine($"Block hash count: {genesisBlock.Verify()}");
             Console.WriteLine($"Verified: {genesisBlock.Verify()}");
 
 
