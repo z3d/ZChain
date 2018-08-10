@@ -12,7 +12,7 @@ namespace ZChain.Tests.Integration
         [InlineData(1, 3)]
         [InlineData(2,1)]
         [InlineData(2, 3)]
-        void GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
+        async void GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
         {
             var genesisBlock = Block.CreateGenesisBlock(new Transaction("First_Address", "Second_Address", 300));
             genesisBlock.State.ShouldBe(BlockState.Mined);
@@ -25,7 +25,7 @@ namespace ZChain.Tests.Integration
             var secondBlock = new Block(genesisBlock, new Transaction("Second_Address", "Third_Address", 200), difficulty);
             secondBlock.State.ShouldBe(BlockState.New);
             IMiner secondBlockMiner = new CpuMiner(threads, secondBlock);
-            secondBlockMiner.MineBlock();
+            await secondBlockMiner.MineBlock();
             secondBlock.Verify().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
             secondBlock.Height.ShouldBe(1);
@@ -35,7 +35,7 @@ namespace ZChain.Tests.Integration
             var thirdBlock = new Block(secondBlock, new Transaction("ThirdAddress", "FourthAddress", 100), difficulty);
             thirdBlock.State.ShouldBe(BlockState.New);
             IMiner thirdBlockMiner = new CpuMiner(threads, thirdBlock);
-            thirdBlockMiner.MineBlock();
+            await thirdBlockMiner.MineBlock();
             thirdBlock.Verify().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
             thirdBlock.Height.ShouldBe(2);

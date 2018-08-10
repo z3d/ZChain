@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,31 +20,36 @@ namespace ZChain.Core.Tree
             _lockObject = new object();
         }
 
-        public Block MineBlock()
+        public async Task<Block> MineBlock()
         {
             var targetHashStart = new string(Block.DefaultBufferCharacter, _blockToMine.Difficulty);
 
-            var tasks = new List<Task>();
+            var tasks = new List<Task<(string, string)>>();
 
             _blockToMine.SetMiningBeginning();
             for (int i = 0; i < _numberOfThreads; i++)
             {
-                tasks.Add(new Task(() => Mine(targetHashStart)));
+                tasks.Add(new Task<(string,string)>(() => Mine(targetHashStart, _blockToMine, _cancellationTokenSource.Token)));
             }
 
-            foreach (var t in tasks)
+            foreach (var task in tasks)
             {
-                t.Start();
+                task.Start();
             }
-
-            Task.WaitAll(tasks.ToArray());
-
+           
+            var completedTask = await Task.WhenAny(tasks);
+            var (nonce, hash) = await completedTask;
+            if (hash == null || nonce == null)
+            {
+                throw new Exception($"{nameof(hash)} is {hash} ");
+            }
+            _blockToMine.SetMinedValues(nonce, hash);
             _blockToMine.Verify();
 
             return _blockToMine;
         }
 
-        private void Mine(string hashStart)
+        private (string nonce, string hash) Mine(string hashStart, Block block, CancellationToken token)
         {
             string GenerateNonce() => Guid.NewGuid().ToString("N");
             var hash = string.Empty;
@@ -53,19 +57,18 @@ namespace ZChain.Core.Tree
             while (!hash.StartsWith(hashStart) && !_cancellationTokenSource.IsCancellationRequested)
             {
                 var nonce = GenerateNonce();
-                hash = Block.CalculateHash(nonce, _blockToMine.Height, _blockToMine.Parent,
-                    _blockToMine.RecordedTransaction,
-                    _blockToMine.Difficulty);
+                hash = Block.CalculateHash(nonce, block.Height, block.Parent,
+                    block.RecordedTransaction,
+                    block.Difficulty);
 
                 if (hash.StartsWith(hashStart))
                 {
-                    _cancellationTokenSource.Cancel();
-                    lock (_lockObject)
-                    {
-                        _blockToMine.SetMinedValues(nonce, hash);
-                    }
+                    return (nonce, hash);
                 }
             }
+
+            token.ThrowIfCancellationRequested();
+            return (null, null);
         }
     }
 }
