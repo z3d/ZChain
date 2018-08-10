@@ -14,7 +14,7 @@ namespace ZChain.Tests.Integration
         [InlineData(2, 3)]
         async void GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
         {
-            var genesisBlock = Block.CreateGenesisBlock(new Transaction("First_Address", "Second_Address", 300));
+            var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
             genesisBlock.State.ShouldBe(BlockState.Mined);
             genesisBlock.Verify().ShouldBeTrue();
             genesisBlock.Parent.ShouldBeNull();
@@ -22,18 +22,18 @@ namespace ZChain.Tests.Integration
             genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
             genesisBlock.State.ShouldBe(BlockState.Mined);
 
-            var secondBlock = new Block(genesisBlock, new Transaction("Second_Address", "Third_Address", 200), difficulty);
+            var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), difficulty);
             secondBlock.State.ShouldBe(BlockState.New);
-            await CpuMiner.MineBlock(threads, secondBlock);
+            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, secondBlock);
             secondBlock.Verify().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
             secondBlock.Height.ShouldBe(1);
             secondBlock.ParentHash.ShouldBe(genesisBlock.Hash);
             secondBlock.State.ShouldBe(BlockState.Mined);
 
-            var thirdBlock = new Block(secondBlock, new Transaction("ThirdAddress", "FourthAddress", 100), difficulty);
+            var thirdBlock = new Block<MoneyTransferDummyTransaction>(secondBlock, new MoneyTransferDummyTransaction("ThirdAddress", "FourthAddress", 100), difficulty);
             thirdBlock.State.ShouldBe(BlockState.New);
-            await CpuMiner.MineBlock(threads, thirdBlock);
+            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, thirdBlock);
             thirdBlock.Verify().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
             thirdBlock.Height.ShouldBe(2);
