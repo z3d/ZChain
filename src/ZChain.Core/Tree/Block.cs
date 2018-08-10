@@ -13,7 +13,6 @@ namespace ZChain.Core.Tree
         public ITransaction RecordedTransaction { get; private set; }
         public int Difficulty { get; private set; }
         public BlockState State { get; private set; }
-        public int IterationsToMinedResult { get; private set; }
         public string Hash { get; private set; }
         public string ParentHash { get; private set; }
         public string Nonce { get; private set; }
@@ -49,14 +48,13 @@ namespace ZChain.Core.Tree
             State = BlockState.Mining;
         }
 
-        public void SetMinedValues(int iterations, string nonce, string hash)
+        public void SetMinedValues(string nonce, string hash)
         {
             if (State != BlockState.Mining)
             {
                 throw new Exception("Cannot set state of a block that isn't being mined");
             }
 
-           IterationsToMinedResult = iterations;
            Nonce = nonce;
            Hash = hash;
            State = BlockState.Mined;
@@ -82,21 +80,20 @@ namespace ZChain.Core.Tree
             Difficulty = difficulty;
             State = BlockState.New;
             Hash = "NEW_BLOCK";
-            IterationsToMinedResult = 0;
         }
    
         public override string ToString()
         {
             return
                 $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} " +
-                $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate} Iterations to mine Result: {IterationsToMinedResult}, ";
+                $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate}";
         }
 
-        public static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, int iterationsToMinedResult, int difficulty)
+        public static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, int difficulty)
         {
             var blockString = nonce + height + parent?.Hash +
                               recordedTransaction +
-                              iterationsToMinedResult + difficulty;
+                              difficulty;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
             using (var hasher = SHA256.Create())
@@ -111,7 +108,7 @@ namespace ZChain.Core.Tree
             string HashBlock()
             {
                 return CalculateHash(Nonce, Height, Parent,
-                    RecordedTransaction, IterationsToMinedResult,
+                    RecordedTransaction,
                     Difficulty);
             }
 
