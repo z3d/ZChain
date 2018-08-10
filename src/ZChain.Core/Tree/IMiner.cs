@@ -2,6 +2,6 @@
 {
     public interface IMiner
     {
-        Block MineBlock(Block blockToMine);
+        Block MineBlock();
     }
 }
