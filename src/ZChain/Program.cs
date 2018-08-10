@@ -9,8 +9,8 @@ namespace ZChain
     {
         static async Task Main()
         {
-            var threads = 10;
-            var difficulty = 2;
+            var threads = 9;
+            var difficulty = 6;
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
@@ -50,6 +50,7 @@ namespace ZChain
 
             var eighthBlock = new Block<MoneyTransferDummyTransaction>(seventhBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
             await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads,eighthBlock);
+            Console.WriteLine(eighthBlock);
             Console.WriteLine($"Verified: {eighthBlock.Verify()}");
 
             var ninthBlock = new Block<MoneyTransferDummyTransaction>(eighthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);

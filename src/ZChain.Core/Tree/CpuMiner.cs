@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -45,7 +44,6 @@ namespace ZChain.Core.Tree
             
             while (!hash.StartsWith(hashStart))
             {
-
                 var nonce = GenerateNonce();
                 hash = Block<T>.CalculateHash(nonce, block.Height, block.Parent,
                     block.RecordedTransaction,
