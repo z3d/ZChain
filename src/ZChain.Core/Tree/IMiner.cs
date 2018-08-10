@@ -1,7 +1,9 @@
-﻿namespace ZChain.Core.Tree
+﻿using System.Threading.Tasks;
+
+namespace ZChain.Core.Tree
 {
     public interface IMiner
     {
-        Block MineBlock();
+        Task<Block> MineBlock();
     }
 }
