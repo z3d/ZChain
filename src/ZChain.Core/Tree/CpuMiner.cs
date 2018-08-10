@@ -11,7 +11,7 @@ namespace ZChain.Core.Tree
         private readonly int _numberOfThreads;
         private readonly Block _blockToMine;
         private readonly CancellationTokenSource _cancellationTokenSource;
-        private object _lockObject;
+        private readonly object _lockObject;
 
         public CpuMiner(int numberOfThreads, Block blockToMine)
         {
@@ -24,8 +24,6 @@ namespace ZChain.Core.Tree
         public Block MineBlock()
         {
             var targetHashStart = new string(Block.DefaultBufferCharacter, _blockToMine.Difficulty);
-
-            var token = _cancellationTokenSource.Token;
 
             var tasks = new List<Task>();
 
@@ -50,29 +48,24 @@ namespace ZChain.Core.Tree
         private void Mine(string hashStart)
         {
             string GenerateNonce() => Guid.NewGuid().ToString("N");
-
-            var iterations = 0;
             var hash = string.Empty;
 
             while (!hash.StartsWith(hashStart) && !_cancellationTokenSource.IsCancellationRequested)
             {
-                ++iterations;
                 var nonce = GenerateNonce();
-                hash = Block.CalculateHash(nonce, _blockToMine.Height, _blockToMine.Parent, _blockToMine.RecordedTransaction,
-                    iterations, _blockToMine.Difficulty);
+                hash = Block.CalculateHash(nonce, _blockToMine.Height, _blockToMine.Parent,
+                    _blockToMine.RecordedTransaction,
+                    _blockToMine.Difficulty);
 
                 if (hash.StartsWith(hashStart))
                 {
                     _cancellationTokenSource.Cancel();
                     lock (_lockObject)
                     {
-                        _blockToMine.SetMinedValues(iterations, nonce, hash);
+                        _blockToMine.SetMinedValues(nonce, hash);
                     }
-
-                    return;
                 }
             }
         }
-
     }
 }

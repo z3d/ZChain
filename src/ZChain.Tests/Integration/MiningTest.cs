@@ -19,7 +19,6 @@ namespace ZChain.Tests.Integration
             genesisBlock.Verify().ShouldBeTrue();
             genesisBlock.Parent.ShouldBeNull();
             genesisBlock.Height.ShouldBe(0);
-            genesisBlock.IterationsToMinedResult.ShouldBe(0);
             genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
             genesisBlock.State.ShouldBe(BlockState.Mined);
 
