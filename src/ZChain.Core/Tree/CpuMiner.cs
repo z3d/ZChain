@@ -9,62 +9,30 @@ namespace ZChain.Core.Tree
     public class CpuMiner : IMiner
     {
         private readonly int _numberOfThreads;
-        private readonly object _lockObject;
+        private readonly Block _blockToMine;
+        private readonly CancellationTokenSource _cancellationTokenSource;
+        private object _lockObject;
 
-        public CpuMiner(int numberOfThreads)
+        public CpuMiner(int numberOfThreads, Block blockToMine)
         {
             _numberOfThreads = numberOfThreads;
+            _blockToMine = blockToMine;
+            _cancellationTokenSource = new CancellationTokenSource();
             _lockObject = new object();
         }
 
-        public Block MineBlock(Block blockToMine)
+        public Block MineBlock()
         {
-            var cts = new CancellationTokenSource();
+            var targetHashStart = new string(Block.DefaultBufferCharacter, _blockToMine.Difficulty);
 
-            void Mine(string hashStart)
-            {
-                string GenerateNonce()
-                {
-                    return Guid.NewGuid().ToString("N");
-                }
-
-                var iterations = 0;
-                var nonce = string.Empty;
-                var minedDate = DateTimeOffset.Now;
-                var hash = string.Empty;
-
-                while (!hash.StartsWith(hashStart) && !cts.IsCancellationRequested)
-                {
-                    ++iterations;
-                    nonce = GenerateNonce();
-                    minedDate = DateTimeOffset.Now;
-                    hash = Block.CalculateHash(nonce, blockToMine.Height,blockToMine.Parent,blockToMine.RecordedTransaction,
-                        minedDate, iterations, blockToMine.Difficulty);
-                }
-
-                if (cts.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                cts.Cancel();
-
-                lock (_lockObject)
-                {
-                    blockToMine.SetMinedValues(iterations, nonce, minedDate, hash);
-                }
-            }
-
-            var targetHashStart = new string(Block.DefaultBufferCharacter, blockToMine.Difficulty);
-
-            var token = cts.Token;
+            var token = _cancellationTokenSource.Token;
 
             var tasks = new List<Task>();
 
-            blockToMine.SetMiningBeginning();
+            _blockToMine.SetMiningBeginning();
             for (int i = 0; i < _numberOfThreads; i++)
             {
-                tasks.Add(new Task(() => Mine(targetHashStart), token));
+                tasks.Add(new Task(() => Mine(targetHashStart)));
             }
 
             foreach (var t in tasks)
@@ -73,9 +41,40 @@ namespace ZChain.Core.Tree
             }
 
             Task.WaitAll(tasks.ToArray());
-            blockToMine.Verify();
+            _blockToMine.Verify();
 
-            return blockToMine;
+            return _blockToMine;
         }
+
+        private void Mine(string hashStart)
+        {
+            string GenerateNonce() => Guid.NewGuid().ToString("N");
+
+            var iterations = 0;
+            var nonce = string.Empty;
+            var minedDate = DateTimeOffset.Now;
+            var hash = string.Empty;
+
+            while (!hash.StartsWith(hashStart) && !_cancellationTokenSource.IsCancellationRequested)
+            {
+                ++iterations;
+                nonce = GenerateNonce();
+                minedDate = DateTimeOffset.Now;
+                hash = Block.CalculateHash(nonce, _blockToMine.Height, _blockToMine.Parent, _blockToMine.RecordedTransaction,
+                    minedDate, iterations, _blockToMine.Difficulty);
+
+                if (hash.StartsWith(hashStart))
+                {
+                    _cancellationTokenSource.Cancel();
+                    lock (_lockObject)
+                    {
+                        _blockToMine.SetMinedValues(iterations, nonce, minedDate, hash);
+                    }
+
+                    return;
+                }
+            }
+        }
+
     }
 }
