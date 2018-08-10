@@ -5,12 +5,12 @@ using System.Text;
 
 namespace ZChain.Core.Tree
 {
-    public class Block
+    public class Block<T>
     {
         public const char DefaultBufferCharacter = '0';
 
-        public Block Parent { get; private set; }
-        public ITransaction RecordedTransaction { get; private set; }
+        public Block<T> Parent { get; private set; }
+        public T RecordedTransaction { get; private set; }
         public int Difficulty { get; private set; }
         public BlockState State { get; private set; }
         public string Hash { get; private set; }
@@ -21,9 +21,9 @@ namespace ZChain.Core.Tree
 
         public long Height { get; private set; }
 
-        public static Block CreateGenesisBlock(ITransaction recordedTransaction)
+        public static Block<T> CreateGenesisBlock(T recordedTransaction)
         {
-            return new Block
+            return new Block<T>
             {
                 Hash = new string(DefaultBufferCharacter, 32),
                 Parent = null,
@@ -61,7 +61,7 @@ namespace ZChain.Core.Tree
            Verify();
         }
 
-        public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
+        public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
             Parent = parent ?? throw new ArgumentNullException(
                          $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
@@ -69,7 +69,7 @@ namespace ZChain.Core.Tree
             Height = parent.Height + 1;
         }
 
-        private Block(ITransaction recordedTransaction, int difficulty)
+        private Block(T recordedTransaction, int difficulty)
         {
             if(difficulty <= 0)
             {
@@ -89,7 +89,7 @@ namespace ZChain.Core.Tree
                 $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate}";
         }
 
-        public static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, int difficulty)
+        public static string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
         {
             var blockString = nonce + height + parent?.Hash +
                               recordedTransaction +
@@ -103,7 +103,7 @@ namespace ZChain.Core.Tree
             }
         }
 
-        public bool Verify(char bufferCharacter = Block.DefaultBufferCharacter)
+        public bool Verify(char bufferCharacter = DefaultBufferCharacter)
         {
             string HashBlock()
             {

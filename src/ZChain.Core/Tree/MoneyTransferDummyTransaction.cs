@@ -1,8 +1,8 @@
 ﻿namespace ZChain.Core.Tree
 {
-    public class Transaction : ITransaction
+    public class MoneyTransferDummyTransaction
     {
-        public Transaction(string fromAddress, string toAddress, int amount)
+        public MoneyTransferDummyTransaction(string fromAddress, string toAddress, int amount)
         {
             FromAddress = fromAddress;
             ToAddress = toAddress;
