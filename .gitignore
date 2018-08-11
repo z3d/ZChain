@@ -16,6 +16,7 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+[Pp]ackages/
 
 
 .vs/
@@ -26,3 +27,6 @@ bld/
 project.lock.json
 .DS_Store
 *.pyc
+
+*.dll
+

@@ -1,55 +1,75 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ZChain.Core.Tree
 {
-    public class Block
+    public class Block<T>
     {
-        private static readonly char BufferCharacter = '0';
-        private readonly CancellationTokenSource _cts;
+        public const char DefaultBufferCharacter = '0';
 
-        public Block Parent { get; private set; }
-        public ITransaction RecordedTransaction { get; private set; }
+        public Block<T> Parent { get; private set; }
+        public T RecordedTransaction { get; private set; }
         public int Difficulty { get; private set; }
         public BlockState State { get; private set; }
-        public int IterationsToMinedResult { get; private set; }
         public string Hash { get; private set; }
         public string ParentHash { get; private set; }
-
         public string Nonce { get; private set; }
 
-        public DateTimeOffset ReceivedDate { get; private set; }
-
-        public DateTimeOffset MinedDate { get; private set; }
+        public DateTimeOffset BeginMiningDate { get; private set; }
 
         public long Height { get; private set; }
 
-        public static Block CreateGenesisBlock(ITransaction recordedTransaction, int difficulty)
+        public static Block<T> CreateGenesisBlock(T recordedTransaction)
         {
-            return new Block(recordedTransaction, difficulty)
+            return new Block<T>
             {
-                Hash = new string(BufferCharacter, 32),
+                Hash = new string(DefaultBufferCharacter, 32),
                 Parent = null,
-                Height = 0
+                Height = 0,
+                RecordedTransaction = recordedTransaction,
+                State = BlockState.Mined,
+                BeginMiningDate = DateTimeOffset.Now
             };
         }
 
-        public Block(Block parent, ITransaction recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
-        {
-            _cts = new CancellationTokenSource();
+        private Block()
+        {                
+        }
 
+        public void SetMiningBeginning()
+        {
+            if (State != BlockState.New)
+            {
+                throw new Exception("Cannot remine a block");
+            }
+            BeginMiningDate = DateTimeOffset.Now;
+            State = BlockState.Mining;
+        }
+
+        public void SetMinedValues(string nonce, string hash)
+        {
+            if (State != BlockState.Mining)
+            {
+                throw new Exception("Cannot set state of a block that isn't being mined");
+            }
+
+           Nonce = nonce;
+           Hash = hash;
+           State = BlockState.Mined;
+           Verify();
+        }
+
+        public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
+        {
             Parent = parent ?? throw new ArgumentNullException(
                          $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
             ParentHash = parent.Hash;
             Height = parent.Height + 1;
         }
 
-        private Block(ITransaction recordedTransaction, int difficulty)
+        private Block(T recordedTransaction, int difficulty)
         {
             if(difficulty <= 0)
             {
@@ -60,138 +80,20 @@ namespace ZChain.Core.Tree
             Difficulty = difficulty;
             State = BlockState.New;
             Hash = "NEW_BLOCK";
-            IterationsToMinedResult = 0;
         }
-
-        public void MineBlock(int numberOfThreads = 1)
-        {
-            void Mine(string hashStart)
-            {
-                var iterations = 0;
-                var nonce = string.Empty;
-                var minedDate = DateTimeOffset.Now;
-                var hash = string.Empty;
-
-                while (!hash.StartsWith(hashStart) && !_cts.IsCancellationRequested)
-                {
-                    ++iterations;
-                    nonce = GenerateNonce();
-                    minedDate = DateTimeOffset.Now;
-                    hash = CalculateHash(nonce, Height, Parent, RecordedTransaction, minedDate, iterations, Difficulty);
-                }
-
-                if (_cts.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                _cts?.Cancel();
-
-                IterationsToMinedResult = iterations;
-                Nonce = nonce;
-                MinedDate = minedDate;
-                Hash = hash;
-            }
-
-            if (State != BlockState.New)
-            {
-                throw new Exception("Cannot remine a block");
-            }
-
-            State = BlockState.Mining;
-            var targetHashStart = new string(BufferCharacter, Difficulty);
-            ReceivedDate = DateTimeOffset.Now;
-
-            if (Height != 0)
-            {
-                var token = _cts.Token;
-
-                var tasks = new List<Task>();
-
-
-                for (int i = 0; i < numberOfThreads; i++)
-                {
-                    tasks.Add(new Task(() => Mine(targetHashStart), token));
-                }
-
-                foreach (var t in tasks)
-                {
-                   t.Start();
-                }
-
-                Task.WaitAny(tasks.ToArray());
-            }
-            else
-            {
-                MinedDate = DateTimeOffset.Now;
-            }
-
-            State = BlockState.Mined;
-            Verify(this);
-        }
-
+   
         public override string ToString()
         {
             return
                 $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} " +
-                $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {ReceivedDate} Mined Date: {MinedDate} Iterations to mine Result: {IterationsToMinedResult}, " +
-                $" Seconds to hash result: {(MinedDate - ReceivedDate).TotalSeconds}";
+                $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate}";
         }
 
-        private string GenerateNonce()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
-        public bool Verify()
-        {
-            return Verify(this);
-        }
-
-        private static bool Verify(Block blockToVerify)
-        {
-            if (blockToVerify.Height != 0)
-            {
-                Verify(blockToVerify.Parent);
-            }
-
-            else if (blockToVerify.Hash != new string(BufferCharacter, 32))
-            {
-                throw new Exception($"Genesis block hash incorrect");
-            }
-            
-            Debug.WriteLine($"Verifying block at height {blockToVerify.Height}");
-
-            if (blockToVerify.State != BlockState.Mined)
-            {
-                throw new Exception($"Invalid block state at height: {blockToVerify.Height} with hash: {blockToVerify.Hash}");
-            }
-
-            if (blockToVerify.Parent?.Hash != blockToVerify.ParentHash)
-            {
-                throw new Exception($"Invalid parent hash at height: {blockToVerify.Height}. Expected {blockToVerify.ParentHash}, got {blockToVerify.Parent?.Hash}");
-            }
-
-            if (!blockToVerify.Hash.StartsWith(new string(BufferCharacter, blockToVerify.Difficulty)))
-            {
-                throw new Exception($"Block format incorrect. Does not start with {blockToVerify.Difficulty} characters");
-            }
-
-            return blockToVerify.Height == 0 || HashBlock(blockToVerify) == blockToVerify.Hash;
-        }
-
-        private static string HashBlock(Block blockToHash)
-        {
-            return CalculateHash(blockToHash.Nonce, blockToHash.Height, blockToHash.Parent,
-                blockToHash.RecordedTransaction, blockToHash.MinedDate, blockToHash.IterationsToMinedResult,
-                blockToHash.Difficulty);
-        }
-
-        private static string CalculateHash(string nonce, long height, Block parent, ITransaction recordedTransaction, DateTimeOffset minedDate, int iterationsToMinedResult, int difficulty)
+        public static string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
         {
             var blockString = nonce + height + parent?.Hash +
-                              recordedTransaction + minedDate.UtcTicks +
-                              iterationsToMinedResult + difficulty;
+                              recordedTransaction +
+                              difficulty;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
             using (var hasher = SHA256.Create())
@@ -199,6 +101,44 @@ namespace ZChain.Core.Tree
                 var hash = hasher.ComputeHash(byteEncodedString);
                 return BitConverter.ToString(hash).Replace("-", "");
             }
+        }
+
+        public bool Verify(char bufferCharacter = DefaultBufferCharacter)
+        {
+            string HashBlock()
+            {
+                return CalculateHash(Nonce, Height, Parent,
+                    RecordedTransaction,
+                    Difficulty);
+            }
+
+            if (Height != 0)
+            {
+                Parent.Verify(bufferCharacter); // Recursively verify chain
+            }
+            else if (Hash != new string(bufferCharacter, 32))
+            {
+                throw new Exception($"Genesis block hash incorrect");
+            }
+
+            Debug.WriteLine($"Verifying block at height {Height}");
+
+            if (State != BlockState.Mined)
+            {
+                throw new Exception($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
+            }
+
+            if (Parent?.Hash != ParentHash)
+            {
+                throw new Exception($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
+            }
+
+            if (!Hash.StartsWith(new string(bufferCharacter, Difficulty)))
+            {
+                throw new Exception($"Block format incorrect. Does not start with {Difficulty} characters");
+            }
+
+            return Height == 0 || HashBlock() == Hash;
         }
 
     }
