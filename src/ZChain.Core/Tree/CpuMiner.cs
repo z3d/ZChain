@@ -7,7 +7,7 @@ namespace ZChain.Core.Tree
 {
     public static class CpuMiner<T>
     {
-        public static async Task<Block<T>> MineBlock(int numberOfThreads, Block<T> blockToMine)
+        public static async Task MineBlock(int numberOfThreads, Block<T> blockToMine)
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
@@ -32,9 +32,6 @@ namespace ZChain.Core.Tree
             var (nonce, hash) = await completedTask;
             
             blockToMine.SetMinedValues(nonce, hash);
-            blockToMine.Verify();
-
-            return blockToMine;
         }
 
         private static (string nonce, string hash) Mine(string hashStart, Block<T> block, CancellationToken cancellationToken)
@@ -45,7 +42,7 @@ namespace ZChain.Core.Tree
             while (!hash.StartsWith(hashStart))
             {
                 var nonce = GenerateNonce();
-                hash = Block<T>.CalculateHash(nonce, block.Height, block.Parent,
+                hash = block.CalculateHash(nonce, block.Height, block.Parent,
                     block.RecordedTransaction,
                     block.Difficulty);
 

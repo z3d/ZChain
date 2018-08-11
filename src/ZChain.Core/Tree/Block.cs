@@ -2,12 +2,14 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace ZChain.Core.Tree
 {
     public class Block<T>
     {
         public const char DefaultBufferCharacter = '0';
+        private string _serializedTransaction;
 
         public Block<T> Parent { get; private set; }
         public T RecordedTransaction { get; private set; }
@@ -30,12 +32,34 @@ namespace ZChain.Core.Tree
                 Height = 0,
                 RecordedTransaction = recordedTransaction,
                 State = BlockState.Mined,
-                BeginMiningDate = DateTimeOffset.Now
+                BeginMiningDate = DateTimeOffset.Now,
+                _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction)
             };
         }
 
+        public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
+        {
+            Parent = parent ?? throw new ArgumentNullException(
+                         $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
+            ParentHash = parent.Hash;
+            Height = parent.Height + 1;
+           _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
+        }
+
+        private Block(T recordedTransaction, int difficulty)
+        {
+            if(difficulty <= 0)
+            {
+                throw new Exception("Difficulty must exceed 0");
+            }
+
+            RecordedTransaction = recordedTransaction;
+            Difficulty = difficulty;
+            State = BlockState.New;
+            Hash = "NEW_BLOCK";
+        }
         private Block()
-        {                
+        {
         }
 
         public void SetMiningBeginning()
@@ -55,44 +79,23 @@ namespace ZChain.Core.Tree
                 throw new Exception("Cannot set state of a block that isn't being mined");
             }
 
-           Nonce = nonce;
-           Hash = hash;
-           State = BlockState.Mined;
-           Verify();
+            Nonce = nonce;
+            Hash = hash;
+            State = BlockState.Mined;
+            Verify();
         }
 
-        public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
-        {
-            Parent = parent ?? throw new ArgumentNullException(
-                         $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
-            ParentHash = parent.Hash;
-            Height = parent.Height + 1;
-        }
-
-        private Block(T recordedTransaction, int difficulty)
-        {
-            if(difficulty <= 0)
-            {
-                throw new Exception("Difficulty must exceed 0");
-            }
-
-            RecordedTransaction = recordedTransaction;
-            Difficulty = difficulty;
-            State = BlockState.New;
-            Hash = "NEW_BLOCK";
-        }
-   
         public override string ToString()
         {
             return
-                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {RecordedTransaction} " +
+                $"Hash: {Hash} Parent Hash: {Parent?.Hash} Height: {Height} Transaction: {_serializedTransaction} " +
                 $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate}";
         }
 
-        public static string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
+        public string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
         {
             var blockString = nonce + height + parent?.Hash +
-                              recordedTransaction +
+                              _serializedTransaction +
                               difficulty;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
