@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
@@ -94,9 +95,9 @@ namespace ZChain.Core.Tree
 
         public string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
         {
-            var blockString = nonce + height + parent?.Hash +
-                              _serializedTransaction +
-                              difficulty;
+            var builder = new StringBuilder();
+            var blockString = builder.Append(nonce).Append(height).Append(parent?.Hash).Append(_serializedTransaction)
+                .Append(difficulty).ToString();
 
             var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
             using (var hasher = SHA256.Create())
