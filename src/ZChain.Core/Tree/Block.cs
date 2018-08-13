@@ -9,7 +9,7 @@ namespace ZChain.Core.Tree
     public class Block<T>
     {
         public const char DefaultBufferCharacter = '0';
-        private string _serializedTransaction;
+        private readonly string _serializedTransaction;
         private readonly object _lockObject;
 
         public Block<T> Parent { get; private set; }
@@ -26,15 +26,14 @@ namespace ZChain.Core.Tree
 
         public static Block<T> CreateGenesisBlock(T recordedTransaction)
         {
-            return new Block<T>
+            return new Block<T>(recordedTransaction, 1)
             {
                 Hash = new string(DefaultBufferCharacter, 32),
                 Parent = null,
                 Height = 0,
                 RecordedTransaction = recordedTransaction,
                 State = BlockState.Mined,
-                BeginMiningDate = DateTimeOffset.Now,
-                _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction)
+                BeginMiningDate = DateTimeOffset.Now
             };
         }
 
@@ -59,9 +58,6 @@ namespace ZChain.Core.Tree
             Difficulty = difficulty;
             State = BlockState.New;
             Hash = "NEW_BLOCK";
-        }
-        private Block()
-        {
         }
 
         public void SetMiningBeginning()
