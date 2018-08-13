@@ -75,6 +75,7 @@ namespace ZChain.Core.Tree
 
         public void SetMinedValues(string nonce, string hash)
         {
+            //todo: lock
             if (State != BlockState.Mining)
             {
                 throw new Exception("Cannot set state of a block that isn't being mined");
