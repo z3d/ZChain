@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
@@ -11,6 +10,7 @@ namespace ZChain.Core.Tree
     {
         public const char DefaultBufferCharacter = '0';
         private string _serializedTransaction;
+        private readonly object _lockObject;
 
         public Block<T> Parent { get; private set; }
         public T RecordedTransaction { get; private set; }
@@ -45,6 +45,7 @@ namespace ZChain.Core.Tree
             ParentHash = parent.Hash;
             Height = parent.Height + 1;
            _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
+           _lockObject = new object();
         }
 
         private Block(T recordedTransaction, int difficulty)
@@ -75,16 +76,18 @@ namespace ZChain.Core.Tree
 
         public void SetMinedValues(string nonce, string hash)
         {
-            //todo: lock
-            if (State != BlockState.Mining)
+            lock (_lockObject)
             {
-                throw new Exception("Cannot set state of a block that isn't being mined");
-            }
+                if (State != BlockState.Mining)
+                {
+                    throw new Exception("Cannot set state of a block that isn't being mined");
+                }
 
-            Nonce = nonce;
-            Hash = hash;
-            State = BlockState.Mined;
-            Verify();
+                Nonce = nonce;
+                Hash = hash;
+                State = BlockState.Mined;
+                Verify();
+            }
         }
 
         public override string ToString()
