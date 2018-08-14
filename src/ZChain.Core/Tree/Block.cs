@@ -40,7 +40,7 @@ namespace ZChain.Core.Tree
         public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
             Parent = parent ?? throw new ArgumentNullException(
-                         $"Parent of block cannot be null. Create genesis block using factory method and use as the root.");
+                         $"Parent of a block cannot be null. If you are creating a new chain, make a genesis block using factory method and use it as the root.");
             ParentHash = parent.Hash;
             Height = parent.Height + 1;
            _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
