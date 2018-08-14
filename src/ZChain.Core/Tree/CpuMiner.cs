@@ -42,8 +42,7 @@ namespace ZChain.Core.Tree
             while (!hash.StartsWith(hashStart))
             {
                 var nonce = GenerateNonce();
-                hash = block.CalculateHash(nonce, block.Height, block.Parent,
-                    block.Difficulty);
+                hash = block.CalculateHash(nonce);
 
                 cancellationToken.ThrowIfCancellationRequested();
                 if (hash.StartsWith(hashStart))
