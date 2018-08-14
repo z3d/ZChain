@@ -5,4 +5,4 @@ It is inspired by [Everything You Wanted To Know About Blockchains, Parts 1](htt
 
 ## Getting Started
 
-This is a [.NET Core](https://www.microsoft.com/net/learn/get-started/windows) Console application
+This is a [.NET Core](https://www.microsoft.com/net/learn/get-started/windows) application
