@@ -93,7 +93,7 @@ namespace ZChain.Core.Tree
                 $"Nonce: {Nonce} Difficulty: {Difficulty} Received Date: {BeginMiningDate}";
         }
 
-        public string CalculateHash(string nonce, long height, Block<T> parent, T recordedTransaction, int difficulty)
+        public string CalculateHash(string nonce, long height, Block<T> parent, int difficulty)
         {
             var builder = new StringBuilder();
             var blockString = builder.Append(nonce).Append(height).Append(parent?.Hash).Append(_serializedTransaction)
@@ -112,7 +112,6 @@ namespace ZChain.Core.Tree
             string HashBlock()
             {
                 return CalculateHash(Nonce, Height, Parent,
-                    RecordedTransaction,
                     Difficulty);
             }
 

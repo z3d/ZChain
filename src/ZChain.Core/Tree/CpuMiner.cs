@@ -43,7 +43,6 @@ namespace ZChain.Core.Tree
             {
                 var nonce = GenerateNonce();
                 hash = block.CalculateHash(nonce, block.Height, block.Parent,
-                    block.RecordedTransaction,
                     block.Difficulty);
 
                 cancellationToken.ThrowIfCancellationRequested();
