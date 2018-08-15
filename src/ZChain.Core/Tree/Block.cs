@@ -12,26 +12,22 @@ namespace ZChain.Core.Tree
         private readonly string _serializedTransaction;
         private readonly object _lockObject;
 
-        public Block<T> Parent { get; private set; }
-        public T RecordedTransaction { get; private set; }
-        public int Difficulty { get; private set; }
+        public Block<T> Parent { get; }
+        public T RecordedTransaction { get; }
+        public int Difficulty { get; }
+        public string ParentHash { get; }
+        public long Height { get; }
+
         public BlockState State { get; private set; }
         public string Hash { get; private set; }
-        public string ParentHash { get; private set; }
         public string Nonce { get; private set; }
-
         public DateTimeOffset BeginMiningDate { get; private set; }
-
-        public long Height { get; private set; }
 
         public static Block<T> CreateGenesisBlock(T recordedTransaction)
         {
             return new Block<T>(recordedTransaction, 1)
             {
                 Hash = new string(DefaultBufferCharacter, 32),
-                Parent = null,
-                Height = 0,
-                RecordedTransaction = recordedTransaction,
                 State = BlockState.Mined,
                 BeginMiningDate = DateTimeOffset.Now
             };
