@@ -103,6 +103,11 @@ namespace ZChain.Core.Tree
             }
         }
 
+        public string SerializeToJson()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
+
         public bool Verify(char bufferCharacter = DefaultBufferCharacter)
         {
             string HashBlock()
