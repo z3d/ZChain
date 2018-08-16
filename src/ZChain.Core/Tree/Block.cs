@@ -11,6 +11,7 @@ namespace ZChain.Core.Tree
         public const char DefaultBufferCharacter = '0';
         private readonly string _serializedTransaction;
         private readonly object _lockObject;
+        private readonly string _blockstring;
 
         public Block<T> Parent { get; }
         public T RecordedTransaction { get; }
@@ -41,6 +42,7 @@ namespace ZChain.Core.Tree
             Height = parent.Height + 1;
            _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
            _lockObject = new object();
+            _blockstring = Height + Parent?.Hash + _serializedTransaction + Difficulty;
         }
 
         private Block(T recordedTransaction, int difficulty)
@@ -103,11 +105,9 @@ namespace ZChain.Core.Tree
 
         public string CalculateHash(string nonce)
         {
-            var builder = new StringBuilder();
-            var blockString = builder.Append(nonce).Append(Height).Append(Parent?.Hash).Append(_serializedTransaction)
-                .Append(Difficulty).ToString();
+            var blockToHash = nonce + _blockstring;
 
-            var byteEncodedString = Encoding.UTF8.GetBytes(blockString);
+            var byteEncodedString = Encoding.UTF8.GetBytes(blockToHash);
             using (var hasher = SHA256.Create())
             {
                 var hash = hasher.ComputeHash(byteEncodedString);
