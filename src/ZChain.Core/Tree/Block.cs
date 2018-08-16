@@ -56,6 +56,17 @@ namespace ZChain.Core.Tree
             Hash = "NEW_BLOCK";
         }
 
+        [JsonConstructor]
+        private Block(Block<T> parent, T recordedTransaction, int difficulty, string nonce, string hash, DateTimeOffset beginMiningDate)
+        {
+            Parent = parent;
+            RecordedTransaction = recordedTransaction;
+            Difficulty = difficulty;
+            Nonce = nonce;
+            Hash = hash;
+            BeginMiningDate = beginMiningDate;
+        }
+
         public void SetMiningBeginning()
         {
             if (State != BlockState.New)
@@ -144,5 +155,9 @@ namespace ZChain.Core.Tree
             return Height == 0 || HashBlock() == Hash;
         }
 
+        public static Block<T> DeserializeBlockFromJsonString(string serialized)
+        {
+            return JsonConvert.DeserializeObject<Block<T>>(serialized);
+        }
     }
 }
