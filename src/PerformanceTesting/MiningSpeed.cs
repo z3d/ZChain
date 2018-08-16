@@ -9,7 +9,7 @@ namespace PerformanceTesting
         [Params(1,2,3,10)]
         public int ThreadCount { get; set; }
 
-        [Params(1, 2, 3, 6)]
+        [Params(1, 2, 3)]
         public int Difficulty { get; set; }
 
         [Benchmark]
