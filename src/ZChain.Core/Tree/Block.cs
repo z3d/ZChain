@@ -14,6 +14,7 @@ namespace ZChain.Core.Tree
         private readonly string _blockstring;
 
         [ThreadStatic]
+        // ReSharper disable once StaticMemberInGenericType
         private static SHA256 _hasher;
 
         public static SHA256 Hasher
