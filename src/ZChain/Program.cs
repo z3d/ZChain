@@ -17,7 +17,6 @@ namespace ZChain
             Console.WriteLine(genesisBlock);
             Console.WriteLine($"Verified: {genesisBlock.Verify()}");
 
-
             var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), difficulty);
             await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads,secondBlock);
             Console.WriteLine(secondBlock);

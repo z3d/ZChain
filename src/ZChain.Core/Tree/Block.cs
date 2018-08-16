@@ -83,7 +83,7 @@ namespace ZChain.Core.Tree
             {
                 if (State != BlockState.Mining)
                 {
-                    throw new Exception("Cannot set state of a block that isn't being mined");
+                    throw new Exception("Cannot set mined values of a block that isn't being mined");
                 }
 
                 Nonce = nonce;
