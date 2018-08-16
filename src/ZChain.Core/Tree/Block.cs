@@ -57,6 +57,7 @@ namespace ZChain.Core.Tree
         }
 
         [JsonConstructor]
+        // ReSharper disable once UnusedMember.Local
         private Block(Block<T> parent, T recordedTransaction, int difficulty, string nonce, string hash, DateTimeOffset beginMiningDate)
         {
             Parent = parent;
