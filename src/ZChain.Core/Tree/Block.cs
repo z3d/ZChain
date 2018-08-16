@@ -13,6 +13,21 @@ namespace ZChain.Core.Tree
         private readonly object _lockObject;
         private readonly string _blockstring;
 
+        [ThreadStatic]
+        private static SHA256 _hasher;
+
+        public static SHA256 Hasher
+        {
+            get
+            {
+                if (_hasher == null)
+                {
+                    _hasher = SHA256.Create();
+                }
+                return _hasher;
+            }
+        }
+
         public Block<T> Parent { get; }
         public T RecordedTransaction { get; }
         public int Difficulty { get; }
@@ -108,11 +123,10 @@ namespace ZChain.Core.Tree
             var blockToHash = nonce + _blockstring;
 
             var byteEncodedString = Encoding.UTF8.GetBytes(blockToHash);
-            using (var hasher = SHA256.Create())
-            {
-                var hash = hasher.ComputeHash(byteEncodedString);
-                return BitConverter.ToString(hash).Replace("-", "");
-            }
+
+            var hash = Hasher.ComputeHash(byteEncodedString);
+            return BitConverter.ToString(hash).Replace("-", "");
+
         }
 
         public string SerializeToJson()
