@@ -5,9 +5,16 @@ using System.Threading.Tasks;
 
 namespace ZChain.Core.Tree
 {
-    public static class CpuMiner<T>
+    public class CpuMiner<T> : IMiner<T>
     {
-        public static async Task MineBlock(int numberOfThreads, Block<T> blockToMine)
+        private readonly int _numberOfThreads;
+
+        public CpuMiner(int numberOfThreads)
+        {
+            _numberOfThreads = numberOfThreads;
+        }
+
+        public async Task MineBlock(Block<T> blockToMine)
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
@@ -15,7 +22,7 @@ namespace ZChain.Core.Tree
             var tasks = new ConcurrentBag<Task<(string, string)>> ();
 
             blockToMine.SetMiningBeginning();
-            for (int i = 0; i < numberOfThreads; i++)
+            for (int i = 0; i < _numberOfThreads; i++)
             {
                 var task = new Task<(string, string)>(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
                 tasks.Add(task);

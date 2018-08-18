@@ -9,58 +9,58 @@ namespace ZChain
     {
         static async Task Main()
         {
-            var threads = 9;
-            var difficulty = 6;
+            var threads = 10;
+            var difficulty = 2;
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
             Console.WriteLine(genesisBlock);
-            Console.WriteLine($"Verified: {genesisBlock.Verify()}");
+            Console.WriteLine($"Verified: {genesisBlock.VerifyMinedBlock()}");
 
             var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads,secondBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(secondBlock);
             Console.WriteLine(secondBlock);
-            Console.WriteLine($"Verified: {secondBlock.Verify()}");
+            Console.WriteLine($"Verified: {secondBlock.VerifyMinedBlock()}");
 
             var thirdBlock = new Block<MoneyTransferDummyTransaction>(secondBlock, new MoneyTransferDummyTransaction("ThirdAddress", "FourthAddress", 100), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, thirdBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock( thirdBlock);
             Console.WriteLine(thirdBlock);
-            Console.WriteLine($"Verified: {thirdBlock.Verify()}");
+            Console.WriteLine($"Verified: {thirdBlock.VerifyMinedBlock()}");
 
             var fourthBlock = new Block<MoneyTransferDummyTransaction>(thirdBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, fourthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(fourthBlock);
             Console.WriteLine(fourthBlock);
-            Console.WriteLine($"Verified: {fourthBlock.Verify()}");
+            Console.WriteLine($"Verified: {fourthBlock.VerifyMinedBlock()}");
 
             var fifthBlock = new Block<MoneyTransferDummyTransaction>(fourthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, fifthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(fifthBlock);
             Console.WriteLine(fifthBlock);
-            Console.WriteLine($"Verified: {fifthBlock.Verify()}");
+            Console.WriteLine($"Verified: {fifthBlock.VerifyMinedBlock()}");
 
             var sixthBlock = new Block<MoneyTransferDummyTransaction>(fifthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, sixthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(sixthBlock);
             Console.WriteLine(sixthBlock);
-            Console.WriteLine($"Verified: {sixthBlock.Verify()}");
+            Console.WriteLine($"Verified: {sixthBlock.VerifyMinedBlock()}");
 
             var seventhBlock = new Block<MoneyTransferDummyTransaction>(sixthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, seventhBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(seventhBlock);
             Console.WriteLine(seventhBlock);
-            Console.WriteLine($"Verified: {seventhBlock.Verify()}");
+            Console.WriteLine($"Verified: {seventhBlock.VerifyMinedBlock()}");
 
             var eighthBlock = new Block<MoneyTransferDummyTransaction>(seventhBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads,eighthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(eighthBlock);
             Console.WriteLine(eighthBlock);
-            Console.WriteLine($"Verified: {eighthBlock.Verify()}");
+            Console.WriteLine($"Verified: {eighthBlock.VerifyMinedBlock()}");
 
             var ninthBlock = new Block<MoneyTransferDummyTransaction>(eighthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, ninthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(ninthBlock);
             Console.WriteLine(ninthBlock);
-            Console.WriteLine($"Verified: {ninthBlock.Verify()}");
+            Console.WriteLine($"Verified: {ninthBlock.VerifyMinedBlock()}");
 
             var tenthBlock = new Block<MoneyTransferDummyTransaction>(ninthBlock, new MoneyTransferDummyTransaction("FourthAddress", "ThirdAddress", 20), difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, tenthBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(tenthBlock);
             Console.WriteLine(tenthBlock);
-            Console.WriteLine($"Verified: {tenthBlock.Verify()}");
+            Console.WriteLine($"Verified: {tenthBlock.VerifyMinedBlock()}");
 
             stopwatch.Stop();
             Console.WriteLine(stopwatch.ElapsedMilliseconds/1000);

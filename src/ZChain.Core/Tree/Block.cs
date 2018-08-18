@@ -65,7 +65,7 @@ namespace ZChain.Core.Tree
         {
             if(difficulty <= 0)
             {
-                throw new Exception("Difficulty must exceed 0");
+                throw new ArgumentOutOfRangeException(nameof(difficulty), "Difficulty must exceed 0");
             }
 
             RecordedTransaction = recordedTransaction;
@@ -90,25 +90,28 @@ namespace ZChain.Core.Tree
         {
             if (State != BlockState.New)
             {
-                throw new Exception("Cannot remine a block");
+                throw new InvalidOperationException("Cannot remine a block"); 
             }
             BeginMiningDate = DateTimeOffset.Now;
             State = BlockState.Mining;
         }
 
-        public void SetMinedValues(string nonce, string hash)
+        public virtual void SetMinedValues(string nonce, string hash)
         {
             lock (_lockObject)
             {
                 if (State != BlockState.Mining)
                 {
-                    throw new Exception("Cannot set mined values of a block that isn't being mined");
+                    throw new InvalidOperationException("Cannot set mined values of a block that isn't being mined");
                 }
 
                 Nonce = nonce;
                 Hash = hash;
                 State = BlockState.Mined;
-                Verify();
+                if (!VerifyMinedBlock())
+                {
+                    throw new InvalidOperationException($"Could not set the mined values: {nameof(nonce)}: {nonce}. {nameof(hash)}: {hash}");
+                }
             }
         }
 
@@ -135,16 +138,11 @@ namespace ZChain.Core.Tree
             return JsonConvert.SerializeObject(this);
         }
 
-        public bool Verify(char bufferCharacter = DefaultBufferCharacter)
+        public bool VerifyMinedBlock(char bufferCharacter = DefaultBufferCharacter)
         {
-            string HashBlock()
-            {
-                return CalculateHash(Nonce);
-            }
-
             if (Height != 0)
             {
-                Parent.Verify(bufferCharacter); // Recursively verify chain
+                Parent.VerifyMinedBlock(bufferCharacter); // Recursively verify chain
             }
             else if (Hash != new string(bufferCharacter, 32))
             {
@@ -168,7 +166,7 @@ namespace ZChain.Core.Tree
                 throw new Exception($"Block format incorrect. Does not start with {Difficulty} characters");
             }
 
-            return Height == 0 || HashBlock() == Hash;
+            return Height == 0 || CalculateHash(Nonce) == Hash;
         }
 
         public static Block<T> DeserializeBlockFromJsonString(string serialized)

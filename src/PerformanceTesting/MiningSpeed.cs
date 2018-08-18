@@ -18,7 +18,7 @@ namespace PerformanceTesting
             var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
 
             var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), Difficulty);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(ThreadCount, secondBlock);
+            await new CpuMiner<MoneyTransferDummyTransaction>(ThreadCount).MineBlock(secondBlock);
         }
     }
 }

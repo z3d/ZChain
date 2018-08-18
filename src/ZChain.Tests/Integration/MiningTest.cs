@@ -16,7 +16,7 @@ namespace ZChain.Tests.Integration
         {
             var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
             genesisBlock.State.ShouldBe(BlockState.Mined);
-            genesisBlock.Verify().ShouldBeTrue();
+            genesisBlock.VerifyMinedBlock().ShouldBeTrue();
             genesisBlock.Parent.ShouldBeNull();
             genesisBlock.Height.ShouldBe(0);
             genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
@@ -24,8 +24,8 @@ namespace ZChain.Tests.Integration
 
             var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), difficulty);
             secondBlock.State.ShouldBe(BlockState.New);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, secondBlock);
-            secondBlock.Verify().ShouldBeTrue();
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(secondBlock);
+            secondBlock.VerifyMinedBlock().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
             secondBlock.Height.ShouldBe(1);
             secondBlock.ParentHash.ShouldBe(genesisBlock.Hash);
@@ -33,8 +33,8 @@ namespace ZChain.Tests.Integration
 
             var thirdBlock = new Block<MoneyTransferDummyTransaction>(secondBlock, new MoneyTransferDummyTransaction("ThirdAddress", "FourthAddress", 100), difficulty);
             thirdBlock.State.ShouldBe(BlockState.New);
-            await CpuMiner<MoneyTransferDummyTransaction>.MineBlock(threads, thirdBlock);
-            thirdBlock.Verify().ShouldBeTrue();
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(thirdBlock);
+            thirdBlock.VerifyMinedBlock().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
             thirdBlock.Height.ShouldBe(2);
             thirdBlock.ParentHash.ShouldBe(secondBlock.Hash);
