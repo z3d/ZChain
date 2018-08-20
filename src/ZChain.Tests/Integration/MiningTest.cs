@@ -14,11 +14,12 @@ namespace ZChain.Tests.Integration
         [InlineData(2, 3)]
         async void GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
         {
-            var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
-            genesisBlock.State.ShouldBe(BlockState.Mined);
+            var genesisBlock = new Block<MoneyTransferDummyTransaction>(null, new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300), difficulty);
+            genesisBlock.State.ShouldBe(BlockState.New);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(genesisBlock);
             genesisBlock.VerifyMinedBlock().ShouldBeTrue();
             genesisBlock.Parent.ShouldBeNull();
-            genesisBlock.Height.ShouldBe(0);
+            genesisBlock.Height.ShouldBe(1);
             genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
             genesisBlock.State.ShouldBe(BlockState.Mined);
 
@@ -27,7 +28,7 @@ namespace ZChain.Tests.Integration
             await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(secondBlock);
             secondBlock.VerifyMinedBlock().ShouldBeTrue();
             secondBlock.Parent.ShouldBe(genesisBlock);
-            secondBlock.Height.ShouldBe(1);
+            secondBlock.Height.ShouldBe(2);
             secondBlock.ParentHash.ShouldBe(genesisBlock.Hash);
             secondBlock.State.ShouldBe(BlockState.Mined);
 
@@ -36,7 +37,7 @@ namespace ZChain.Tests.Integration
             await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(thirdBlock);
             thirdBlock.VerifyMinedBlock().ShouldBeTrue();
             thirdBlock.Parent.ShouldBe(secondBlock);
-            thirdBlock.Height.ShouldBe(2);
+            thirdBlock.Height.ShouldBe(3);
             thirdBlock.ParentHash.ShouldBe(secondBlock.Hash);
             thirdBlock.State.ShouldBe(BlockState.Mined);
         }

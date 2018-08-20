@@ -15,7 +15,7 @@ namespace PerformanceTesting
         [Benchmark]
         public async Task Mine()
         {
-            var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
+            var genesisBlock = new Block<MoneyTransferDummyTransaction>(null, new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300), Difficulty);
 
             var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), Difficulty);
             await new CpuMiner<MoneyTransferDummyTransaction>(ThreadCount).MineBlock(secondBlock);

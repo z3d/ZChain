@@ -39,23 +39,12 @@ namespace ZChain.Core.Tree
         public string Hash { get; private set; }
         public string Nonce { get; private set; }
         public DateTimeOffset BeginMiningDate { get; private set; }
-
-        public static Block<T> CreateGenesisBlock(T recordedTransaction)
-        {
-            return new Block<T>(recordedTransaction, 1)
-            {
-                Hash = new string(DefaultBufferCharacter, 32),
-                State = BlockState.Mined,
-                BeginMiningDate = DateTimeOffset.Now
-            };
-        }
-
+      
         public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
         {
-            Parent = parent ?? throw new ArgumentNullException(
-                         $"Parent of a block cannot be null. If you are creating a new chain, make a genesis block using factory method and use it as the root.");
-            ParentHash = parent.Hash;
-            Height = parent.Height + 1;
+            Parent = parent;
+            ParentHash = parent?.Hash;
+            Height = parent?.Height + 1 ?? 1;
            _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
            _lockObject = new object();
             _blockstring = Height + Parent?.Hash + _serializedTransaction + Difficulty;
@@ -140,15 +129,11 @@ namespace ZChain.Core.Tree
 
         public bool VerifyMinedBlock(char bufferCharacter = DefaultBufferCharacter)
         {
-            if (Height != 0)
+            if (Height != 1)
             {
                 Parent.VerifyMinedBlock(bufferCharacter); // Recursively verify chain
             }
-            else if (Hash != new string(bufferCharacter, 32))
-            {
-                throw new InvalidOperationException($"Genesis block hash incorrect");
-            }
-
+           
             Debug.WriteLine($"Verifying block at height {Height}");
 
             if (State != BlockState.Mined)

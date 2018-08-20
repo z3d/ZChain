@@ -10,10 +10,11 @@ namespace ZChain
         static async Task Main()
         {
             var threads = 11;
-            var difficulty = 7;
+            var difficulty = 4;
 
             var stopwatch = Stopwatch.StartNew();
-            var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
+            var genesisBlock = new Block<MoneyTransferDummyTransaction>(null, new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300), difficulty);
+            await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(genesisBlock);
             Console.WriteLine(genesisBlock);
             Console.WriteLine($"Verified: {genesisBlock.VerifyMinedBlock()}");
 
