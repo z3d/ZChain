@@ -146,27 +146,39 @@ namespace ZChain.Core.Tree
             }
             else if (Hash != new string(bufferCharacter, 32))
             {
-                throw new Exception($"Genesis block hash incorrect");
+                throw new InvalidOperationException($"Genesis block hash incorrect");
             }
 
             Debug.WriteLine($"Verifying block at height {Height}");
 
             if (State != BlockState.Mined)
             {
-                throw new Exception($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
+                throw new InvalidOperationException($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
             }
 
             if (Parent?.Hash != ParentHash)
             {
-                throw new Exception($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
+                throw new InvalidOperationException($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
             }
 
             if (!Hash.StartsWith(new string(bufferCharacter, Difficulty)))
             {
-                throw new Exception($"Block format incorrect. Does not start with {Difficulty} characters");
+                throw new InvalidOperationException($"Block format incorrect. Does not start with {Difficulty} characters");
             }
 
-            return Height == 0 || CalculateHash(Nonce) == Hash;
+            if (Height == 0)
+            {
+                return true;
+            }
+
+            var calculatedHash = CalculateHash(Nonce);
+
+            if (calculatedHash != Hash)
+            {
+                throw new InvalidOperationException($"Verification of block with {Hash} failed. Nonce was {Nonce}, and calculated Hash was {calculatedHash}");
+            }
+
+            return true;
         }
 
         public static Block<T> DeserializeBlockFromJsonString(string serialized)
