@@ -10,7 +10,7 @@ namespace ZChain
         static async Task Main()
         {
             var threads = 11;
-            var difficulty = 5;
+            var difficulty = 7;
 
             var stopwatch = Stopwatch.StartNew();
             var genesisBlock = Block<MoneyTransferDummyTransaction>.CreateGenesisBlock(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300));
@@ -63,7 +63,7 @@ namespace ZChain
             Console.WriteLine($"Verified: {tenthBlock.VerifyMinedBlock()}");
 
             stopwatch.Stop();
-            Console.WriteLine($"Time taken for execution: {stopwatch.Elapsed.Seconds} seconds");
+            Console.WriteLine($"Time taken for execution: {stopwatch.Elapsed.TotalSeconds} seconds");
 
             Console.WriteLine("Done, press any key to continue");
             Console.ReadLine();
