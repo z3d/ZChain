@@ -13,7 +13,7 @@ variables:
 
 steps:
 - script: dotnet restore $(solution)
-- script: dotnet build -c $(buildConfiguration)
+- script: dotnet build $(solution) -c $(buildConfiguration)
 
 - task: DotNetCoreCLI@2
   inputs:
