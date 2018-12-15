@@ -17,7 +17,7 @@ namespace ZChain.Core
         // ReSharper disable once StaticMemberInGenericType
         private static SHA256 _hasher;
 
-        public static SHA256 Hasher
+        private static SHA256 Hasher
         {
             get
             {
