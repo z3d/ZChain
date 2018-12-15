@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ZChain.Core;
+using ZChain.CpuMiner;
 
 namespace ZChain
 {

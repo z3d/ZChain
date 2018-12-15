@@ -6,15 +6,17 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <WarningLevel>0</WarningLevel>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="benchmarkdotnet" Version="0.11.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ZChain\ZChain.csproj" />
+    <ProjectReference Include="..\ZChain.Core\ZChain.Core.csproj" />
+    <ProjectReference Include="..\ZChain.CpuMiner\ZChain.CpuMiner.csproj" />
   </ItemGroup>
 
 </Project>

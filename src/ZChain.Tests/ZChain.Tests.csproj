@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ZChain.Core\ZChain.Core.csproj" />
+    <ProjectReference Include="..\ZChain.CpuMiner\ZChain.CpuMiner.csproj" />
   </ItemGroup>
 
 </Project>

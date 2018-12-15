@@ -2,8 +2,9 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using ZChain.Core;
 
-namespace ZChain.Core
+namespace ZChain.CpuMiner
 {
     public class CpuMiner<T> : IMiner<T>
     {

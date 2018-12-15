@@ -2,6 +2,7 @@
 using Shouldly;
 using Xunit;
 using ZChain.Core;
+using ZChain.CpuMiner;
 
 namespace ZChain.Tests.Integration
 {

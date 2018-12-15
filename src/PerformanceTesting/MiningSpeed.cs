@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using ZChain.Core;
+using ZChain.CpuMiner;
 
 namespace PerformanceTesting
 {
