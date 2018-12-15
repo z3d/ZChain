@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using ZChain.Core.Tree;
+using ZChain.Core;
 
 namespace PerformanceTesting
 {

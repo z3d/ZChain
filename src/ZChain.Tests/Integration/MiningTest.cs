@@ -1,7 +1,7 @@
 ﻿using System;
 using Shouldly;
 using Xunit;
-using ZChain.Core.Tree;
+using ZChain.Core;
 
 namespace ZChain.Tests.Integration
 {

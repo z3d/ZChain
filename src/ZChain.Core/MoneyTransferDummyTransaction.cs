@@ -1,4 +1,4 @@
-﻿namespace ZChain.Core.Tree
+﻿namespace ZChain.Core
 {
     public class MoneyTransferDummyTransaction
     {

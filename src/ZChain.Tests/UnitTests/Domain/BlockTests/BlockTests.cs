@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
-using ZChain.Core.Tree;
+using ZChain.Core;
 
 namespace ZChain.Tests.UnitTests.Domain.BlockTests
 {

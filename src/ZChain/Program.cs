@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using ZChain.Core.Tree;
+using ZChain.Core;
 
 namespace ZChain
 {

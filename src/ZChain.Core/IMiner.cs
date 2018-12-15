@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace ZChain.Core.Tree
+namespace ZChain.Core
 {
     public interface IMiner<T>
     {

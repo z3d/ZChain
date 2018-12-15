@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ZChain.Core.Tree
+namespace ZChain.Core
 {
     public class CpuMiner<T> : IMiner<T>
     {

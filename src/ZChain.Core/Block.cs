@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace ZChain.Core.Tree
+namespace ZChain.Core
 {
     public class Block<T>
     {
