@@ -13,6 +13,7 @@ namespace ZChain.Core
         private readonly object _lockObject;
         private readonly string _blockstring;
 
+        // See: https://stackoverflow.com/a/18086509/914352
         [ThreadStatic]
         // ReSharper disable once StaticMemberInGenericType
         private static SHA256 _hasher;
