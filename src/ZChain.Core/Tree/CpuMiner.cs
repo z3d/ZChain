@@ -19,7 +19,7 @@ namespace ZChain.Core.Tree
             var cancellationTokenSource = new CancellationTokenSource();
             var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
 
-            var tasks = new ConcurrentBag<Task<(string, string)>> ();
+            var tasks = new ConcurrentBag<Task<(string, string)>>();
 
             blockToMine.SetMiningBeginning();
             for (int i = 0; i < _numberOfThreads; i++)

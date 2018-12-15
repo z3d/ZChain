@@ -99,7 +99,7 @@ namespace ZChain.Core.Tree
                 State = BlockState.Mined;
                 if (!VerifyMinedBlock())
                 {
-                    throw new InvalidOperationException($"Could not set the mined values: {nameof(nonce)}: {nonce}. {nameof(hash)}: {hash}");
+                    throw new Exception($"Could not set the mined values: {nameof(nonce)}: {nonce}. {nameof(hash)}: {hash}");
                 }
             }
         }
@@ -138,17 +138,17 @@ namespace ZChain.Core.Tree
 
             if (State != BlockState.Mined)
             {
-                throw new InvalidOperationException($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
+                throw new BlockStateException($"Invalid block state, of {State} at height: {Height} with hash: {Hash}");
             }
 
             if (Parent?.Hash != ParentHash)
             {
-                throw new InvalidOperationException($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
+                throw new BlockStateException($"Invalid parent hash at height: {Height}. Expected {ParentHash}, got {Parent?.Hash}");
             }
 
             if (!Hash.StartsWith(new string(bufferCharacter, Difficulty)))
             {
-                throw new InvalidOperationException($"Block format incorrect. Does not start with {Difficulty} characters");
+                throw new BlockStateException($"Block format incorrect. Does not start with {Difficulty} characters");
             }
 
             if (Height == 0)
@@ -160,7 +160,7 @@ namespace ZChain.Core.Tree
 
             if (calculatedHash != Hash)
             {
-                throw new InvalidOperationException($"Verification of block with {Hash} failed. Nonce was {Nonce}, and calculated Hash was {calculatedHash}");
+                throw new BlockStateException($"Verification of block with {Hash} failed. Nonce was {Nonce}, and calculated Hash was {calculatedHash}");
             }
 
             return true;
