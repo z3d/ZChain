@@ -51,14 +51,13 @@ namespace ZChain.Core.Tree
                 var nonce = GenerateNonce();
                 hash = block.CalculateHash(nonce);
 
-                cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
                 if (hash.StartsWith(hashStart))
                 {
                     return (nonce, hash);
                 }
             }
 
-            cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
             throw new InvalidOperationException("Unreachable code reached");
         }
     }
