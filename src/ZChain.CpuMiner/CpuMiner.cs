@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ZChain.Core;
@@ -20,7 +20,7 @@ namespace ZChain.CpuMiner
             var cancellationTokenSource = new CancellationTokenSource();
             var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
 
-            var tasks = new ConcurrentBag<Task<(string, string)>>();
+            var tasks = new List<Task<(string, string)>>();
 
             blockToMine.SetMiningBeginning();
             for (int i = 0; i < _numberOfThreads; i++)
