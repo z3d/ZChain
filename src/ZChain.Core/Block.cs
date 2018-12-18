@@ -41,7 +41,7 @@ namespace ZChain.Core
         public string Nonce { get; private set; }
         public DateTimeOffset BeginMiningDate { get; private set; }
       
-        public Block(Block<T> parent, T recordedTransaction, int difficulty): this(recordedTransaction, difficulty)
+        public Block(Block<T> parent, T recordedTransaction, int difficulty)
         {
             Parent = parent;
             ParentHash = parent?.Hash;
@@ -49,11 +49,8 @@ namespace ZChain.Core
            _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
            _lockObject = new object();
             _blockstring = Height + Parent?.Hash + _serializedTransaction + Difficulty;
-        }
 
-        private Block(T recordedTransaction, int difficulty)
-        {
-            if(difficulty <= 0)
+            if (difficulty <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(difficulty), "Difficulty must exceed 0");
             }
@@ -62,7 +59,7 @@ namespace ZChain.Core
             Difficulty = difficulty;
             State = BlockState.New;
             Hash = "NEW_BLOCK";
-        }
+        }        
 
         [JsonConstructor]
         // ReSharper disable once UnusedMember.Local
