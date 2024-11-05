@@ -1,7 +1,6 @@
-namespace ZChain.Tests.Builder;
-   
 using ZChain.Core;
 
+namespace ZChain.Tests.Builder;
 public class BlockBuilder<T>
 {
     private Block<T> _previousBlock;

@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace ZChain.Core
+namespace ZChain.Core;
+
+public class BlockStateException : Exception
 {
-    public class BlockStateException : Exception
+    public BlockStateException(string message): base(message)
     {
-        public BlockStateException(string message): base(message)
-        {
-           
-        }        
-    }
+       
+    }        
 }
