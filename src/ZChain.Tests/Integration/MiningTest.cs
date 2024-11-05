@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 using ZChain.Core;
@@ -13,7 +14,7 @@ public class MiningTest
     [InlineData(1, 3)]
     [InlineData(2, 1)]
     [InlineData(2, 3)]
-    async void GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
+    async Task GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
     {
         var genesisBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
             .WithPreviousBlock(null)
