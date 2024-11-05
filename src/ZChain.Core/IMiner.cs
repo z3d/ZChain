@@ -1,9 +1,8 @@
 ﻿using System.Threading.Tasks;
 
-namespace ZChain.Core
+namespace ZChain.Core;
+
+public interface IMiner<T>
 {
-    public interface IMiner<T>
-    {
-        Task MineBlock(Block<T> blockToMine);
-    }
+    Task MineBlock(Block<T> blockToMine);
 }

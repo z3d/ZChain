@@ -2,16 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-    <LangVersion>7.3</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.3</LangVersion>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>

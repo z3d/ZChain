@@ -2,6 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using ZChain.Core;
 using ZChain.CpuMiner;
+using ZChain.Tests.Builder;
 
 namespace PerformanceTesting
 {
@@ -16,10 +17,20 @@ namespace PerformanceTesting
         [Benchmark]
         public async Task Mine()
         {
-            var genesisBlock = new Block<MoneyTransferDummyTransaction>(null, new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300), Difficulty);
+            var genesisBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+                .WithPreviousBlock(null)
+                .WithTransaction(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300))
+                .WithDifficulty(Difficulty)
+                .Build();
+
             await new CpuMiner<MoneyTransferDummyTransaction>(ThreadCount).MineBlock(genesisBlock);
 
-            var secondBlock = new Block<MoneyTransferDummyTransaction>(genesisBlock, new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200), Difficulty);
+            var secondBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+                .WithPreviousBlock(genesisBlock)
+                .WithTransaction(new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200))
+                .WithDifficulty(Difficulty)
+                .Build();
+
             await new CpuMiner<MoneyTransferDummyTransaction>(ThreadCount).MineBlock(secondBlock);
         }
     }

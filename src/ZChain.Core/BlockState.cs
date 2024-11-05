@@ -1,9 +1,8 @@
-﻿namespace ZChain.Core
+﻿namespace ZChain.Core;
+
+public enum BlockState
 {
-    public enum BlockState
-    {
-        New,
-        Mining,
-        Mined
-    }
+    New,
+    Mining,
+    Mined
 }
