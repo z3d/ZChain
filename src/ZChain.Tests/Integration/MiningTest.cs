@@ -4,7 +4,7 @@ using Shouldly;
 using Xunit;
 using ZChain.Core;
 using ZChain.CpuMiner;
-using ZChain.Tests.Builder;
+using ZChain.Core.Builder;
 
 namespace ZChain.Tests.Integration;
 public class MiningTest
@@ -16,39 +16,56 @@ public class MiningTest
     [InlineData(2, 3)]
     async Task GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
     {
-        var genesisBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var genesisTransaction = new TransactionBuilder()
+            .WithFromAddress("First_Address")
+            .WithToAddress("Second_Address")
+            .WithAmount(300)
+            .Build();
+        var genesisBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(null)
-            .WithTransaction(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300))
+            .WithTransaction(genesisTransaction)
             .WithDifficulty(difficulty)
             .Build();
         genesisBlock.State.ShouldBe(BlockState.New);
-        await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(genesisBlock);
+
+        await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(genesisBlock);
         genesisBlock.VerifyMinedBlock().ShouldBeTrue();
         genesisBlock.Parent.ShouldBeNull();
         genesisBlock.Height.ShouldBe(1);
         genesisBlock.BeginMiningDate.ShouldBeGreaterThan(new DateTimeOffset());
         genesisBlock.State.ShouldBe(BlockState.Mined);
 
-        var secondBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var secondTransaction = new TransactionBuilder()
+            .WithFromAddress("Second_Address")
+            .WithToAddress("Third_Address")
+            .WithAmount(200)
+            .Build();
+        var secondBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(genesisBlock)
-            .WithTransaction(new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200))
+            .WithTransaction(secondTransaction)
             .WithDifficulty(difficulty)
             .Build();
         secondBlock.State.ShouldBe(BlockState.New);
-        await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(secondBlock);
+
+        await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(secondBlock);
         secondBlock.VerifyMinedBlock().ShouldBeTrue();
         secondBlock.Parent.ShouldBe(genesisBlock);
         secondBlock.Height.ShouldBe(2);
         secondBlock.ParentHash.ShouldBe(genesisBlock.Hash);
         secondBlock.State.ShouldBe(BlockState.Mined);
 
-        var thirdBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var thirdTransaction = new TransactionBuilder()
+            .WithFromAddress("ThirdAddress")
+            .WithToAddress("FourthAddress")
+            .WithAmount(100)
+            .Build();
+        var thirdBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(secondBlock)
-            .WithTransaction(new MoneyTransferDummyTransaction("ThirdAddress", "FourthAddress", 100))
+            .WithTransaction(thirdTransaction)
             .WithDifficulty(difficulty)
             .Build();
         thirdBlock.State.ShouldBe(BlockState.New);
-        await new CpuMiner<MoneyTransferDummyTransaction>(threads).MineBlock(thirdBlock);
+        await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(thirdBlock);
         thirdBlock.VerifyMinedBlock().ShouldBeTrue();
         thirdBlock.Parent.ShouldBe(secondBlock);
         thirdBlock.Height.ShouldBe(3);

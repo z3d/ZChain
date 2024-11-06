@@ -3,15 +3,19 @@ using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 using ZChain.Core;
-using ZChain.Tests.Builder;
+using ZChain.Core.Builder;
 
 namespace ZChain.Tests.UnitTests.Domain.BlockTests;
 
 public class BlockTests
 {
-    private readonly Block<MoneyTransferDummyTransaction> _rootBlock;
-    private readonly MoneyTransferDummyTransaction _moneyTransferDummyTransaction = new MoneyTransferDummyTransaction("Second_Address", "Third_Address", 200);
-    private readonly IMiner<MoneyTransferDummyTransaction> _miner = new StubMiner<MoneyTransferDummyTransaction>("c349c83bd38c46c48321c7f9fbcffe3a", "0000BF5EBA588845258F54C0E3D07EE2CCA2E3F01135225D291BF0717353AA67");
+    private readonly Block<MoneyTransferTransaction> _rootBlock;
+    private readonly MoneyTransferTransaction _moneyTransferDummyTransaction = new TransactionBuilder()
+        .WithFromAddress("Second_Address")
+        .WithToAddress("Third_Address")
+        .WithAmount(200)
+        .Build();
+    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>("c349c83bd38c46c48321c7f9fbcffe3a", "0000BF5EBA588845258F54C0E3D07EE2CCA2E3F01135225D291BF0717353AA67");
 
     class StubMiner<T> : IMiner<T>
     {
@@ -34,9 +38,14 @@ public class BlockTests
 
     public BlockTests()
     {
-        _rootBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var rootTransaction = new TransactionBuilder()
+            .WithFromAddress("First_Address")
+            .WithToAddress("Second_Address")
+            .WithAmount(300)
+            .Build();
+        _rootBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(null)
-            .WithTransaction(new MoneyTransferDummyTransaction("First_Address", "Second_Address", 300))
+            .WithTransaction(rootTransaction)
             .WithDifficulty(4)
             .Build();
         _miner.MineBlock(_rootBlock);
@@ -51,7 +60,7 @@ public class BlockTests
     [Fact]
     public void WhenMiningABlock_AndSettingABadNonce_ShouldThrow()
     {
-        var firstChild = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var firstChild = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(4)
@@ -62,7 +71,7 @@ public class BlockTests
     [Fact]
     public void WhenHavingANewBlock_AndAttemptingToVerify_ShouldThrow()
     {
-        var newBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var newBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
@@ -73,12 +82,12 @@ public class BlockTests
     [Fact]
     public void WhenMiningABlockAndSettingValues_AndTheHashDoesntMatchTheExpectedDifficulty_Throws()
     {
-        var rootBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var rootBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(null)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
             .Build();
-        var newBlock = new BlockBuilder<MoneyTransferDummyTransaction>()
+        var newBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)

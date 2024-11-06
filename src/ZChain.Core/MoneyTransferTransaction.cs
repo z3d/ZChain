@@ -1,8 +1,8 @@
 ﻿namespace ZChain.Core;
 
-public class MoneyTransferDummyTransaction
+public class MoneyTransferTransaction
 {
-    public MoneyTransferDummyTransaction(string fromAddress, string toAddress, int amount)
+    public MoneyTransferTransaction(string fromAddress, string toAddress, int amount)
     {
         FromAddress = fromAddress;
         ToAddress = toAddress;

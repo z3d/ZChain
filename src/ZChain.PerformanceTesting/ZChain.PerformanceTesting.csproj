@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -20,7 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ZChain.Core\ZChain.Core.csproj" />
     <ProjectReference Include="..\ZChain.CpuMiner\ZChain.CpuMiner.csproj" />
-    <ProjectReference Include="..\ZChain.Tests\ZChain.Tests.csproj" />
   </ItemGroup>
 
 </Project>
