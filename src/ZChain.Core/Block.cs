@@ -55,6 +55,11 @@ public class Block<T>
             throw new ArgumentOutOfRangeException(nameof(difficulty), "Difficulty must exceed 0");
         }
 
+        if (recordedTransaction is null)
+        {
+            throw new ArgumentException("Transaction cannot be null", nameof(recordedTransaction));
+        }
+
         RecordedTransaction = recordedTransaction;
         Difficulty = difficulty;
         State = BlockState.New;

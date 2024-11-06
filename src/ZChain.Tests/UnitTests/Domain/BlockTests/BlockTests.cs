@@ -94,4 +94,44 @@ public class BlockTests
             .Build();
         Should.Throw<BlockStateException>(() => _miner.MineBlock(newBlock));
     }
+
+    [Fact]
+    public void WhenCreatingANewBlock_ItShouldHaveCorrectInitialState()
+    {
+        var newBlock = new BlockBuilder<MoneyTransferTransaction>()
+            .WithPreviousBlock(_rootBlock)
+            .WithTransaction(_moneyTransferDummyTransaction)
+            .WithDifficulty(3)
+            .Build();
+        newBlock.State.ShouldBe(BlockState.New);
+        newBlock.Height.ShouldBe(_rootBlock.Height + 1);
+        newBlock.Parent.ShouldBe(_rootBlock);
+    }
+
+    [Fact]
+    public void WhenVerifyingANonMinedBlock_ItShouldThrow()
+    {
+        Should.Throw<BlockStateException>(() =>
+        {
+            var newBlock = new BlockBuilder<MoneyTransferTransaction>()
+            .WithPreviousBlock(_rootBlock)
+            .WithTransaction(_moneyTransferDummyTransaction)
+            .WithDifficulty(3)
+            .Build();
+            newBlock.VerifyMinedBlock().ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void WhenCreatingABlockWithInvalidTransaction_ShouldThrow()
+    {
+        Should.Throw<ArgumentException>(() =>
+        {
+            new BlockBuilder<MoneyTransferTransaction>()
+                .WithPreviousBlock(_rootBlock)
+                .WithTransaction(null)
+                .WithDifficulty(3)
+                .Build();
+        });
+    }
 }
