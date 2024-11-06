@@ -4,7 +4,7 @@ public class TransactionBuilder
 {
     private string _fromAddress;
     private string _toAddress;
-    private int _amount;
+    private decimal _amount;
 
     public TransactionBuilder WithFromAddress(string fromAddress)
     {
@@ -18,7 +18,7 @@ public class TransactionBuilder
         return this;
     }
 
-    public TransactionBuilder WithAmount(int amount)
+    public TransactionBuilder WithAmount(decimal amount)
     {
         _amount = amount;
         return this;

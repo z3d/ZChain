@@ -19,7 +19,7 @@ public class MiningTest
         var genesisTransaction = new TransactionBuilder()
             .WithFromAddress("First_Address")
             .WithToAddress("Second_Address")
-            .WithAmount(300)
+            .WithAmount(300m)
             .Build();
         var genesisBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(null)
@@ -38,7 +38,7 @@ public class MiningTest
         var secondTransaction = new TransactionBuilder()
             .WithFromAddress("Second_Address")
             .WithToAddress("Third_Address")
-            .WithAmount(200)
+            .WithAmount(200m)
             .Build();
         var secondBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(genesisBlock)
@@ -57,7 +57,7 @@ public class MiningTest
         var thirdTransaction = new TransactionBuilder()
             .WithFromAddress("ThirdAddress")
             .WithToAddress("FourthAddress")
-            .WithAmount(100)
+            .WithAmount(100m)
             .Build();
         var thirdBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(secondBlock)

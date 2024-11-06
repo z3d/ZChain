@@ -2,7 +2,7 @@
 
 public class MoneyTransferTransaction
 {
-    public MoneyTransferTransaction(string fromAddress, string toAddress, int amount)
+    public MoneyTransferTransaction(string fromAddress, string toAddress, decimal amount)
     {
         FromAddress = fromAddress;
         ToAddress = toAddress;
@@ -14,5 +14,5 @@ public class MoneyTransferTransaction
     }
     public string FromAddress { get; private set; }
     public string ToAddress { get; private set; }
-    public int Amount { get; private set; }
+    public decimal Amount { get; private set; }
 }

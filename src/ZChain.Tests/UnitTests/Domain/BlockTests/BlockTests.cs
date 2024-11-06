@@ -15,7 +15,7 @@ public class BlockTests
         .WithToAddress("Third_Address")
         .WithAmount(200)
         .Build();
-    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>("c349c83bd38c46c48321c7f9fbcffe3a", "0000BF5EBA588845258F54C0E3D07EE2CCA2E3F01135225D291BF0717353AA67");
+    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>("789822be49ab427da24a6477dbb4f24e", "0000BCA37B7928378F46215DB844BF8D61047E31D417731B2A8D0D9872138BDF");
 
     class StubMiner<T> : IMiner<T>
     {
