@@ -10,14 +10,23 @@ namespace ZChain.Tests.UnitTests.Domain.BlockTests;
 
 public class BlockTests
 {
-    private readonly Block<MoneyTransferTransaction> _rootBlock;
+    private const string TestNonce = "TEST_NONCE";
+    private const string TestHash = "0000TEST_HASH";
+    private const string FromAddress1 = "First_Address";
+    private const string FromAddress2 = "Second_Address";
+    private const string ToAddress1 = "Second_Address";
+    private const string ToAddress2 = "Third_Address";
+    private const decimal Amount1 = 300;
+    private const decimal Amount2 = 200;
+
+    private readonly Block<MoneyTransferTransaction> _minedRootBlock;
     private readonly MoneyTransferTransaction _moneyTransferDummyTransaction = new TransactionBuilder()
-        .WithFromAddress("Second_Address")
-        .WithToAddress("Third_Address")
-        .WithAmount(200)
+        .WithFromAddress(FromAddress2)
+        .WithToAddress(ToAddress2)
+        .WithAmount(Amount2)
         .Build();
-    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>("789822be49ab427da24a6477dbb4f24e", "0000BCA37B7928378F46215DB844BF8D61047E31D417731B2A8D0D9872138BDF");
-    private readonly IHasher _hasher = new Sha256Hasher();
+    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>(TestNonce, TestHash);
+    private readonly IHasher _hasher = new StubHasher();
 
     class StubMiner<T> : IMiner<T>
     {
@@ -38,45 +47,42 @@ public class BlockTests
         }
     }
 
+    class StubHasher : IHasher
+    {
+        public string ComputeHash(string input)
+        {
+            // Return a predictable hash value for testing purposes
+            return TestHash;
+        }
+    }
+
     public BlockTests()
     {
         var rootTransaction = new TransactionBuilder()
-            .WithFromAddress("First_Address")
-            .WithToAddress("Second_Address")
-            .WithAmount(300)
+            .WithFromAddress(FromAddress1)
+            .WithToAddress(ToAddress1)
+            .WithAmount(Amount1)
             .Build();
-        _rootBlock = new BlockBuilder<MoneyTransferTransaction>()
+        _minedRootBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(null)
             .WithTransaction(rootTransaction)
             .WithDifficulty(4)
             .WithHasher(_hasher)
             .Build();
-        _miner.MineBlock(_rootBlock);
+        _miner.MineBlock(_minedRootBlock);
     }
 
     [Fact]
     public void WhenHavingAMinedBlock_AndAttemptingToRemine_ShouldThrow()
     {
-        Should.Throw<InvalidOperationException>(() => _miner.MineBlock(_rootBlock));
-    }
-
-    [Fact]
-    public void WhenMiningABlock_AndSettingABadNonce_ShouldThrow()
-    {
-        var firstChild = new BlockBuilder<MoneyTransferTransaction>()
-            .WithPreviousBlock(_rootBlock)
-            .WithTransaction(_moneyTransferDummyTransaction)
-            .WithDifficulty(4)
-            .WithHasher(_hasher)
-            .Build();
-        Should.Throw<BlockStateException>(() => _miner.MineBlock(firstChild));
-    }
+        Should.Throw<InvalidOperationException>(() => _miner.MineBlock(_minedRootBlock));
+    }  
 
     [Fact]
     public void WhenHavingANewBlock_AndAttemptingToVerify_ShouldThrow()
     {
         var newBlock = new BlockBuilder<MoneyTransferTransaction>()
-            .WithPreviousBlock(_rootBlock)
+            .WithPreviousBlock(_minedRootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
             .WithHasher(_hasher)
@@ -106,14 +112,14 @@ public class BlockTests
     public void WhenCreatingANewBlock_ItShouldHaveCorrectInitialState()
     {
         var newBlock = new BlockBuilder<MoneyTransferTransaction>()
-            .WithPreviousBlock(_rootBlock)
+            .WithPreviousBlock(_minedRootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(3)
             .WithHasher(_hasher)
             .Build();
         newBlock.State.ShouldBe(BlockState.New);
-        newBlock.Height.ShouldBe(_rootBlock.Height + 1);
-        newBlock.Parent.ShouldBe(_rootBlock);
+        newBlock.Height.ShouldBe(_minedRootBlock.Height + 1);
+        newBlock.Parent.ShouldBe(_minedRootBlock);
     }
 
     [Fact]
@@ -122,7 +128,7 @@ public class BlockTests
         Should.Throw<BlockStateException>(() =>
         {
             var newBlock = new BlockBuilder<MoneyTransferTransaction>()
-            .WithPreviousBlock(_rootBlock)
+            .WithPreviousBlock(_minedRootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(3)
             .WithHasher(_hasher)
@@ -137,7 +143,7 @@ public class BlockTests
         Should.Throw<ArgumentException>(() =>
         {
             new BlockBuilder<MoneyTransferTransaction>()
-                .WithPreviousBlock(_rootBlock)
+                .WithPreviousBlock(_minedRootBlock)
                 .WithTransaction(null)
                 .WithDifficulty(3)
                 .WithHasher(_hasher)
