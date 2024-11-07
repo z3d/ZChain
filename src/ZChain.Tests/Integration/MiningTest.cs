@@ -5,6 +5,7 @@ using Xunit;
 using ZChain.Core;
 using ZChain.CpuMiner;
 using ZChain.Core.Builder;
+using ZChain.Hashers;
 
 namespace ZChain.Tests.Integration;
 public class MiningTest
@@ -16,6 +17,8 @@ public class MiningTest
     [InlineData(2, 3)]
     async Task GivenThreeBlocks_WhenMining_TheyAreMinedCorrectly(int threads, int difficulty)
     {
+        var hasher = new Sha256Hasher();
+
         var genesisTransaction = new TransactionBuilder()
             .WithFromAddress("First_Address")
             .WithToAddress("Second_Address")
@@ -25,6 +28,7 @@ public class MiningTest
             .WithPreviousBlock(null)
             .WithTransaction(genesisTransaction)
             .WithDifficulty(difficulty)
+            .WithHasher(hasher)
             .Build();
         genesisBlock.State.ShouldBe(BlockState.New);
 
@@ -44,6 +48,7 @@ public class MiningTest
             .WithPreviousBlock(genesisBlock)
             .WithTransaction(secondTransaction)
             .WithDifficulty(difficulty)
+            .WithHasher(hasher)
             .Build();
         secondBlock.State.ShouldBe(BlockState.New);
 
@@ -63,6 +68,7 @@ public class MiningTest
             .WithPreviousBlock(secondBlock)
             .WithTransaction(thirdTransaction)
             .WithDifficulty(difficulty)
+            .WithHasher(hasher)
             .Build();
         thirdBlock.State.ShouldBe(BlockState.New);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(thirdBlock);

@@ -4,6 +4,7 @@ using Shouldly;
 using Xunit;
 using ZChain.Core;
 using ZChain.Core.Builder;
+using ZChain.Hashers;
 
 namespace ZChain.Tests.UnitTests.Domain.BlockTests;
 
@@ -16,6 +17,7 @@ public class BlockTests
         .WithAmount(200)
         .Build();
     private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>("789822be49ab427da24a6477dbb4f24e", "0000BCA37B7928378F46215DB844BF8D61047E31D417731B2A8D0D9872138BDF");
+    private readonly IHasher _hasher = new Sha256Hasher();
 
     class StubMiner<T> : IMiner<T>
     {
@@ -47,6 +49,7 @@ public class BlockTests
             .WithPreviousBlock(null)
             .WithTransaction(rootTransaction)
             .WithDifficulty(4)
+            .WithHasher(_hasher)
             .Build();
         _miner.MineBlock(_rootBlock);
     }
@@ -64,6 +67,7 @@ public class BlockTests
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(4)
+            .WithHasher(_hasher)
             .Build();
         Should.Throw<BlockStateException>(() => _miner.MineBlock(firstChild));
     }
@@ -75,6 +79,7 @@ public class BlockTests
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
+            .WithHasher(_hasher)
             .Build();
         Should.Throw<BlockStateException>(() => newBlock.VerifyMinedBlock());
     }
@@ -86,11 +91,13 @@ public class BlockTests
             .WithPreviousBlock(null)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
+            .WithHasher(_hasher)
             .Build();
         var newBlock = new BlockBuilder<MoneyTransferTransaction>()
             .WithPreviousBlock(rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(2)
+            .WithHasher(_hasher)
             .Build();
         Should.Throw<BlockStateException>(() => _miner.MineBlock(newBlock));
     }
@@ -102,6 +109,7 @@ public class BlockTests
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(3)
+            .WithHasher(_hasher)
             .Build();
         newBlock.State.ShouldBe(BlockState.New);
         newBlock.Height.ShouldBe(_rootBlock.Height + 1);
@@ -117,6 +125,7 @@ public class BlockTests
             .WithPreviousBlock(_rootBlock)
             .WithTransaction(_moneyTransferDummyTransaction)
             .WithDifficulty(3)
+            .WithHasher(_hasher)
             .Build();
             newBlock.VerifyMinedBlock().ShouldBeFalse();
         });
@@ -131,6 +140,7 @@ public class BlockTests
                 .WithPreviousBlock(_rootBlock)
                 .WithTransaction(null)
                 .WithDifficulty(3)
+                .WithHasher(_hasher)
                 .Build();
         });
     }

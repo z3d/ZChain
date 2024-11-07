@@ -1,3 +1,5 @@
+using System;
+
 namespace ZChain.Core.Builder;
 
 public class BlockBuilder<T>
@@ -5,6 +7,7 @@ public class BlockBuilder<T>
     private Block<T> _previousBlock;
     private T _transaction;
     private int _difficulty;
+    private IHasher _hasher;
 
     public BlockBuilder<T> WithPreviousBlock(Block<T> previousBlock)
     {
@@ -24,8 +27,19 @@ public class BlockBuilder<T>
         return this;
     }
 
+    public BlockBuilder<T> WithHasher(IHasher hasher)
+    {
+        _hasher = hasher;
+        return this;
+    }
+
     public Block<T> Build()
     {
-        return new Block<T>(_previousBlock, _transaction, _difficulty);
+        if (_hasher == null)
+        {
+            throw new InvalidOperationException("Hasher must be provided");
+        }
+
+        return new Block<T>(_previousBlock, _transaction, _difficulty, _hasher);
     }
 }

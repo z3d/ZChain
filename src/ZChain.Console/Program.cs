@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ZChain.Core;
 using ZChain.Core.Builder;
 using ZChain.CpuMiner;
+using ZChain.Hashers;
 
 namespace ZChain;
 
@@ -13,6 +14,7 @@ class Program
     {
         var threads = 11;
         var difficulty = 4;
+        var hasher = new Sha256Hasher();
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -21,7 +23,7 @@ class Program
             .WithToAddress("Second_Address")
             .WithAmount(300)
             .Build();
-        var genesisBlock = new Block<MoneyTransferTransaction>(null, genesisTransaction, difficulty);
+        var genesisBlock = new Block<MoneyTransferTransaction>(null, genesisTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(genesisBlock);
         Console.WriteLine(genesisBlock);
         Console.WriteLine($"Verified: {genesisBlock.VerifyMinedBlock()}");
@@ -31,7 +33,7 @@ class Program
             .WithToAddress("Third_Address")
             .WithAmount(200)
             .Build();
-        var secondBlock = new Block<MoneyTransferTransaction>(genesisBlock, secondTransaction, difficulty);
+        var secondBlock = new Block<MoneyTransferTransaction>(genesisBlock, secondTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(secondBlock);
         Console.WriteLine(secondBlock);
         Console.WriteLine($"Verified: {secondBlock.VerifyMinedBlock()}");
@@ -41,7 +43,7 @@ class Program
             .WithToAddress("FourthAddress")
             .WithAmount(100)
             .Build();
-        var thirdBlock = new Block<MoneyTransferTransaction>(secondBlock, thirdTransaction, difficulty);
+        var thirdBlock = new Block<MoneyTransferTransaction>(secondBlock, thirdTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(thirdBlock);
         Console.WriteLine(thirdBlock);
         Console.WriteLine($"Verified: {thirdBlock.VerifyMinedBlock()}");
@@ -51,7 +53,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var fourthBlock = new Block<MoneyTransferTransaction>(thirdBlock, fourthTransaction, difficulty);
+        var fourthBlock = new Block<MoneyTransferTransaction>(thirdBlock, fourthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(fourthBlock);
         Console.WriteLine(fourthBlock);
         Console.WriteLine($"Verified: {fourthBlock.VerifyMinedBlock()}");
@@ -61,7 +63,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var fifthBlock = new Block<MoneyTransferTransaction>(fourthBlock, fifthTransaction, difficulty);
+        var fifthBlock = new Block<MoneyTransferTransaction>(fourthBlock, fifthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(fifthBlock);
         Console.WriteLine(fifthBlock);
         Console.WriteLine($"Verified: {fifthBlock.VerifyMinedBlock()}");
@@ -71,7 +73,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var sixthBlock = new Block<MoneyTransferTransaction>(fifthBlock, sixthTransaction, difficulty);
+        var sixthBlock = new Block<MoneyTransferTransaction>(fifthBlock, sixthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(sixthBlock);
         Console.WriteLine(sixthBlock);
         Console.WriteLine($"Verified: {sixthBlock.VerifyMinedBlock()}");
@@ -81,7 +83,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var seventhBlock = new Block<MoneyTransferTransaction>(sixthBlock, seventhTransaction, difficulty);
+        var seventhBlock = new Block<MoneyTransferTransaction>(sixthBlock, seventhTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(seventhBlock);
         Console.WriteLine(seventhBlock);
         Console.WriteLine($"Verified: {seventhBlock.VerifyMinedBlock()}");
@@ -91,7 +93,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var eighthBlock = new Block<MoneyTransferTransaction>(seventhBlock, eighthTransaction, difficulty);
+        var eighthBlock = new Block<MoneyTransferTransaction>(seventhBlock, eighthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(eighthBlock);
         Console.WriteLine(eighthBlock);
         Console.WriteLine($"Verified: {eighthBlock.VerifyMinedBlock()}");
@@ -101,7 +103,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var ninthBlock = new Block<MoneyTransferTransaction>(eighthBlock, ninthTransaction, difficulty);
+        var ninthBlock = new Block<MoneyTransferTransaction>(eighthBlock, ninthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(ninthBlock);
         Console.WriteLine(ninthBlock);
         Console.WriteLine($"Verified: {ninthBlock.VerifyMinedBlock()}");
@@ -111,7 +113,7 @@ class Program
             .WithToAddress("ThirdAddress")
             .WithAmount(20)
             .Build();
-        var tenthBlock = new Block<MoneyTransferTransaction>(ninthBlock, tenthTransaction, difficulty);
+        var tenthBlock = new Block<MoneyTransferTransaction>(ninthBlock, tenthTransaction, difficulty, hasher);
         await new CpuMiner<MoneyTransferTransaction>(threads).MineBlock(tenthBlock);
         Console.WriteLine(tenthBlock);
         Console.WriteLine($"Verified: {tenthBlock.VerifyMinedBlock()}");

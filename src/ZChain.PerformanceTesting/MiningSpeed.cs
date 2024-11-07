@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using ZChain.Core;
 using ZChain.CpuMiner;
 using ZChain.Core.Builder;
+using ZChain.Hashers;
 
 namespace PerformanceTesting
 {
@@ -13,6 +14,8 @@ namespace PerformanceTesting
 
         [Params(1, 2, 3)]
         public int Difficulty { get; set; }
+
+        private readonly IHasher _hasher = new Sha256Hasher();
 
         [Benchmark]
         public async Task Mine()
@@ -26,6 +29,7 @@ namespace PerformanceTesting
                 .WithPreviousBlock(null)
                 .WithTransaction(genesisTransaction)
                 .WithDifficulty(Difficulty)
+                .WithHasher(_hasher)
                 .Build();
 
             await new CpuMiner<MoneyTransferTransaction>(ThreadCount).MineBlock(genesisBlock);
@@ -39,6 +43,7 @@ namespace PerformanceTesting
                 .WithPreviousBlock(genesisBlock)
                 .WithTransaction(secondTransaction)
                 .WithDifficulty(Difficulty)
+                .WithHasher(_hasher)
                 .Build();
 
             await new CpuMiner<MoneyTransferTransaction>(ThreadCount).MineBlock(secondBlock);

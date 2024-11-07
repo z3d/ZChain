@@ -12,23 +12,7 @@ public class Block<T>
     private readonly string _serializedTransaction;
     private readonly object _lockObject;
     private readonly string _blockstring;
-
-    // See: https://stackoverflow.com/a/18086509/914352
-    [ThreadStatic]
-    // ReSharper disable once StaticMemberInGenericType
-    private static SHA256 _hasher;
-
-    private static SHA256 Hasher
-    {
-        get
-        {
-            if (_hasher == null)
-            {
-                _hasher = SHA256.Create();
-            }
-            return _hasher;
-        }
-    }
+    private readonly IHasher _hasher;
 
     public Block<T> Parent { get; }
     public T RecordedTransaction { get; }
@@ -40,15 +24,16 @@ public class Block<T>
     public string Hash { get; private set; }
     public string Nonce { get; private set; }
     public DateTimeOffset BeginMiningDate { get; private set; }
-  
-    public Block(Block<T> parent, T recordedTransaction, int difficulty)
+
+    public Block(Block<T> parent, T recordedTransaction, int difficulty, IHasher hasher)
     {
         Parent = parent;
         ParentHash = parent?.Hash;
         Height = parent?.Height + 1 ?? 1;
-       _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
-       _lockObject = new object();
+        _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
+        _lockObject = new object();
         _blockstring = Height + Parent?.Hash + _serializedTransaction + Difficulty;
+        _hasher = hasher ?? throw new ArgumentNullException(nameof(hasher));
 
         if (difficulty <= 0)
         {
@@ -64,10 +49,9 @@ public class Block<T>
         Difficulty = difficulty;
         State = BlockState.New;
         Hash = "NEW_BLOCK";
-    }        
+    }
 
     [JsonConstructor]
-    // ReSharper disable once UnusedMember.Local
     private Block(Block<T> parent, T recordedTransaction, int difficulty, string nonce, string hash, DateTimeOffset beginMiningDate)
     {
         Parent = parent;
@@ -82,7 +66,7 @@ public class Block<T>
     {
         if (State != BlockState.New)
         {
-            throw new InvalidOperationException("Cannot remine a block"); 
+            throw new InvalidOperationException("Cannot remine a block");
         }
         BeginMiningDate = DateTimeOffset.Now;
         State = BlockState.Mining;
@@ -117,12 +101,7 @@ public class Block<T>
     public string CalculateHash(string nonce)
     {
         var blockToHash = nonce + _blockstring;
-
-        var byteEncodedString = Encoding.UTF8.GetBytes(blockToHash);
-
-        var hash = Hasher.ComputeHash(byteEncodedString);
-        return BitConverter.ToString(hash).Replace("-", "");
-
+        return _hasher.ComputeHash(blockToHash);
     }
 
     public string SerializeToJson()
@@ -136,7 +115,7 @@ public class Block<T>
         {
             Parent.VerifyMinedBlock(bufferCharacter); // Recursively verify chain
         }
-       
+
         Debug.WriteLine($"Verifying block at height {Height}");
 
         if (State != BlockState.Mined)
@@ -169,8 +148,9 @@ public class Block<T>
         return true;
     }
 
-    public static Block<T> DeserializeBlockFromJsonString(string serialized)
+    public static Block<T> DeserializeBlockFromJsonString(string serialized, IHasher hasher)
     {
-        return JsonConvert.DeserializeObject<Block<T>>(serialized);
+        var block = JsonConvert.DeserializeObject<Block<T>>(serialized);
+        return block;
     }
 }
