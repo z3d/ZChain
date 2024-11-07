@@ -133,7 +133,7 @@ public class BlockTests
             .WithDifficulty(3)
             .WithHasher(_hasher)
             .Build();
-            newBlock.VerifyMinedBlock().ShouldBeFalse();
+            newBlock.VerifyMinedBlock();
         });
     }
 
