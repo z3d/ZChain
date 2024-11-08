@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Security.Cryptography;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace ZChain.Core;
@@ -42,7 +40,7 @@ public class Block<T>
 
         if (recordedTransaction is null)
         {
-            throw new ArgumentException("Transaction cannot be null", nameof(recordedTransaction));
+            throw new ArgumentNullException(nameof(recordedTransaction), "Transaction cannot be null");
         }
 
         RecordedTransaction = recordedTransaction;
