@@ -1,18 +1,12 @@
 ﻿namespace ZChain.Core;
 
-public class MoneyTransferTransaction
+public class MoneyTransferTransaction(string fromAddress, string toAddress, decimal amount)
 {
-    public MoneyTransferTransaction(string fromAddress, string toAddress, decimal amount)
-    {
-        FromAddress = fromAddress;
-        ToAddress = toAddress;
-        Amount = amount;
-    }
     public override string ToString()
     {
         return $"From {FromAddress}, To {ToAddress}, Amount {Amount}";
     }
-    public string FromAddress { get; private set; }
-    public string ToAddress { get; private set; }
-    public decimal Amount { get; private set; }
+    public string FromAddress { get; private set; } = fromAddress;
+    public string ToAddress { get; private set; } = toAddress;
+    public decimal Amount { get; private set; } = amount;
 }

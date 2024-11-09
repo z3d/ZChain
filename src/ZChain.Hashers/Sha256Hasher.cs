@@ -13,10 +13,7 @@ public class Sha256Hasher : IHasher
     {
         get
         {
-            if (_hasher == null)
-            {
-                _hasher = SHA256.Create();
-            }
+            _hasher ??= SHA256.Create();
             return _hasher;
         }
     }
