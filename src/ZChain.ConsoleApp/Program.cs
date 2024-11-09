@@ -6,9 +6,9 @@ using ZChain.Core.Builder;
 using ZChain.CpuMiner;
 using ZChain.Hashers;
 
-namespace ZChain;
+namespace ZChain.ConsoleApp;
 
-class Program
+static class Program
 {
     static async Task Main()
     {

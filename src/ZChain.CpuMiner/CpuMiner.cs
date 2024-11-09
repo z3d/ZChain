@@ -6,18 +6,13 @@ using ZChain.Core;
 
 namespace ZChain.CpuMiner;
 
-public class CpuMiner<T> : IMiner<T>
+public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
 {
-    private readonly int _numberOfThreads;
-
-    public CpuMiner(int numberOfThreads)
-    {
-        _numberOfThreads = numberOfThreads;
-    }
+    private readonly int _numberOfThreads = numberOfThreads;
 
     public async Task MineBlock(Block<T> blockToMine)
     {
-        var cancellationTokenSource = new CancellationTokenSource();
+        using var cancellationTokenSource = new CancellationTokenSource();
         var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
 
         var tasks = new List<Task<(string, string)>>();
@@ -33,20 +28,20 @@ public class CpuMiner<T> : IMiner<T>
         {
             task.Start();
         }
-       
+
         var completedTask = await Task.WhenAny(tasks);
-        cancellationTokenSource.Cancel();
+        await cancellationTokenSource.CancelAsync();
 
         var (nonce, hash) = await completedTask;
-        
+
         blockToMine.SetMinedValues(nonce, hash);
     }
 
     private static (string nonce, string hash) Mine(string hashStart, Block<T> block, CancellationToken cancellationToken)
     {
-        string GenerateNonce() => Guid.NewGuid().ToString("N");
+        static string GenerateNonce() => Guid.NewGuid().ToString("N");
         var hash = string.Empty;
-        
+
         while (!hash.StartsWith(hashStart))
         {
             var nonce = GenerateNonce();

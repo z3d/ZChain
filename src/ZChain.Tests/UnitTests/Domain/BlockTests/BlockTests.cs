@@ -25,19 +25,13 @@ public class BlockTests
         .WithToAddress(ToAddress2)
         .WithAmount(Amount2)
         .Build();
-    private readonly IMiner<MoneyTransferTransaction> _miner = new StubMiner<MoneyTransferTransaction>(TestNonce, TestHash);
+    private readonly StubMiner<MoneyTransferTransaction> _miner = new(TestNonce, TestHash);
     private readonly IHasher _hasher = new StubHasher();
 
-    class StubMiner<T> : IMiner<T>
+    class StubMiner<T>(string nonce, string hash) : IMiner<T>
     {
-        private readonly string _nonce;
-        private readonly string _hash;
-
-        public StubMiner(string nonce, string hash)
-        {
-            _nonce = nonce;
-            _hash = hash;
-        }
+        private readonly string _nonce = nonce;
+        private readonly string _hash = hash;
 
         public Task MineBlock(Block<T> blockToMine)
         {
