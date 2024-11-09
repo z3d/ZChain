@@ -2,10 +2,6 @@
 
 namespace ZChain.Core;
 
-public class BlockStateException : Exception
+public class BlockStateException(string message) : Exception(message)
 {
-    public BlockStateException(string message): base(message)
-    {
-       
-    }        
 }

@@ -1,11 +1,11 @@
 ﻿using System;
 using BenchmarkDotNet.Running;
 
-namespace PerformanceTesting;
+namespace ZChain.PerformanceTesting;
 
-public class Program
+public static class Program
 {
-    public static void Main(string[] args)
+    public static void Main()
     {
         BenchmarkRunner.Run<MiningSpeed>();
         Console.ReadLine();
