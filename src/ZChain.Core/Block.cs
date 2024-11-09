@@ -50,6 +50,7 @@ public class Block<T>
     }
 
     [JsonConstructor]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Json Constructor")]
     private Block(Block<T> parent, T recordedTransaction, int difficulty, string nonce, string hash, DateTimeOffset beginMiningDate)
     {
         Parent = parent;
@@ -84,7 +85,7 @@ public class Block<T>
             State = BlockState.Mined;
             if (!VerifyMinedBlock())
             {
-                throw new Exception($"Could not set the mined values: {nameof(nonce)}: {nonce}. {nameof(hash)}: {hash}");
+                throw new BlockStateException($"Could not set the mined values: {nameof(nonce)}: {nonce}. {nameof(hash)}: {hash}");
             }
         }
     }
@@ -146,7 +147,7 @@ public class Block<T>
         return true;
     }
 
-    public static Block<T> DeserializeBlockFromJsonString(string serialized, IHasher hasher)
+    public static Block<T> DeserializeBlockFromJsonString(string serialized)
     {
         var block = JsonConvert.DeserializeObject<Block<T>>(serialized);
         return block;
