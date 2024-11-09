@@ -22,6 +22,6 @@ public class Sha256Hasher : IHasher
     {
         var byteEncodedString = Encoding.UTF8.GetBytes(input);
         var hash = Hasher.ComputeHash(byteEncodedString);
-        return BitConverter.ToString(hash).Replace("-", "");
+        return Convert.ToHexString(hash);
     }
 }
