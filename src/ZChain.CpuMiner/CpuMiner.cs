@@ -20,17 +20,14 @@ public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
         blockToMine.SetMiningBeginning();
         for (int i = 0; i < _numberOfThreads; i++)
         {
-            var task = new Task<(string, string)>(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
+            var task = Task.Run(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
             tasks.Add(task);
         }
 
-        foreach (var task in tasks)
-        {
-            task.Start();
-        }
-
         var completedTask = await Task.WhenAny(tasks);
-        await cancellationTokenSource.CancelAsync();
+#pragma warning disable S6966 // Awaitable method should be used
+        cancellationTokenSource.Cancel();
+#pragma warning restore S6966 // Awaitable method should be used
 
         var (nonce, hash) = await completedTask;
 
