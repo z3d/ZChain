@@ -1,56 +1,81 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ZChain.Core;
 
 namespace ZChain.CpuMiner;
 
-public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
+public class CpuMiner<T>
 {
-    private readonly int _numberOfThreads = numberOfThreads;
+    private readonly int _numberOfThreads;
+    private readonly int _batchSize;
+
+    public CpuMiner(int numberOfThreads, int batchSize = 1000)
+    {
+        _numberOfThreads = numberOfThreads;
+        _batchSize = batchSize;
+    }
 
     public async Task MineBlock(Block<T> blockToMine)
     {
         using var cancellationTokenSource = new CancellationTokenSource();
         var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
 
-        var tasks = new List<Task<(string, string)>>();
-
         blockToMine.SetMiningBeginning();
+        
+        var tasks = new List<Task<(string, string)>>(_numberOfThreads);
+        var nonceRangePerThread = uint.MaxValue / (ulong)_numberOfThreads;
+
         for (int i = 0; i < _numberOfThreads; i++)
         {
-            var task = Task.Run(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
+            var startNonce = (ulong)i * nonceRangePerThread;
+            var endNonce = ((ulong)(i + 1)) * nonceRangePerThread - 1;
+            
+            var task = Task.Run(() => MineBatch(
+                targetHashStart, 
+                blockToMine, 
+                startNonce, 
+                endNonce,
+                _batchSize, 
+                cancellationTokenSource.Token));
+                
             tasks.Add(task);
         }
 
         var completedTask = await Task.WhenAny(tasks);
-#pragma warning disable S6966 // Awaitable method should be used
         cancellationTokenSource.Cancel();
-#pragma warning restore S6966 // Awaitable method should be used
 
         var (nonce, hash) = await completedTask;
-
         blockToMine.SetMinedValues(nonce, hash);
     }
 
-    private static (string nonce, string hash) Mine(string hashStart, Block<T> block, CancellationToken cancellationToken)
+    private static (string, string) MineBatch(
+        string targetHashStart,
+        Block<T> block,
+        ulong startNonce,
+        ulong endNonce, 
+        int batchSize,
+        CancellationToken token)
     {
-        static string GenerateNonce() => Guid.NewGuid().ToString("N");
-        var hash = string.Empty;
+        var sb = new StringBuilder();
+        var currentNonce = startNonce;
 
-        while (!hash.StartsWith(hashStart))
+        while (currentNonce < endNonce && !token.IsCancellationRequested)
         {
-            var nonce = GenerateNonce();
-            hash = block.CalculateHash(nonce);
-
-            cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
-            if (hash.StartsWith(hashStart))
+            for (int i = 0; i < batchSize && currentNonce < endNonce; i++, currentNonce++)
             {
-                return (nonce, hash);
+                var nonceStr = currentNonce.ToString();
+                var hash = block.CalculateHash(nonceStr);
+                
+                if (hash.StartsWith(targetHashStart))
+                {
+                    return (nonceStr, hash);
+                }
             }
         }
 
-        throw new InvalidOperationException("Unreachable code reached");
+        return (string.Empty, string.Empty);
     }
 }
