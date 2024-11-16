@@ -7,17 +7,8 @@ using ZChain.Core;
 
 namespace ZChain.CpuMiner;
 
-public class CpuMiner<T>
+public class CpuMiner<T>(int numberOfThreads, int batchSize = 1000)
 {
-    private readonly int _numberOfThreads;
-    private readonly int _batchSize;
-
-    public CpuMiner(int numberOfThreads, int batchSize = 1000)
-    {
-        _numberOfThreads = numberOfThreads;
-        _batchSize = batchSize;
-    }
-
     public async Task MineBlock(Block<T> blockToMine)
     {
         using var cancellationTokenSource = new CancellationTokenSource();
@@ -25,10 +16,10 @@ public class CpuMiner<T>
 
         blockToMine.SetMiningBeginning();
         
-        var tasks = new List<Task<(string, string)>>(_numberOfThreads);
-        var nonceRangePerThread = uint.MaxValue / (ulong)_numberOfThreads;
+        var tasks = new List<Task<(string, string)>>(numberOfThreads);
+        var nonceRangePerThread = uint.MaxValue / (ulong)numberOfThreads;
 
-        for (int i = 0; i < _numberOfThreads; i++)
+        for (int i = 0; i < numberOfThreads; i++)
         {
             var startNonce = (ulong)i * nonceRangePerThread;
             var endNonce = ((ulong)(i + 1)) * nonceRangePerThread - 1;
@@ -38,14 +29,14 @@ public class CpuMiner<T>
                 blockToMine, 
                 startNonce, 
                 endNonce,
-                _batchSize, 
+                batchSize, 
                 cancellationTokenSource.Token));
                 
             tasks.Add(task);
         }
 
         var completedTask = await Task.WhenAny(tasks);
-        cancellationTokenSource.Cancel();
+        await cancellationTokenSource.CancelAsync();
 
         var (nonce, hash) = await completedTask;
         blockToMine.SetMinedValues(nonce, hash);
@@ -55,11 +46,10 @@ public class CpuMiner<T>
         string targetHashStart,
         Block<T> block,
         ulong startNonce,
-        ulong endNonce, 
+        ulong endNonce,
         int batchSize,
         CancellationToken token)
     {
-        var sb = new StringBuilder();
         var currentNonce = startNonce;
 
         while (currentNonce < endNonce && !token.IsCancellationRequested)
@@ -68,7 +58,7 @@ public class CpuMiner<T>
             {
                 var nonceStr = currentNonce.ToString();
                 var hash = block.CalculateHash(nonceStr);
-                
+
                 if (hash.StartsWith(targetHashStart))
                 {
                     return (nonceStr, hash);
