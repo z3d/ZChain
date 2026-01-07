@@ -30,3 +30,5 @@ project.lock.json
 
 *.dll
 
+# Benchmark artifacts
+BenchmarkDotNet.Artifacts/
