@@ -1,4 +1,4 @@
-﻿namespace ZChain.Core;
+namespace ZChain.Core;
 
 public class MoneyTransferTransaction(string fromAddress, string toAddress, decimal amount)
 {

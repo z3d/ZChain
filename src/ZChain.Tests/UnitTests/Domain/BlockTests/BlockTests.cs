@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 using ZChain.Core;
 using ZChain.Core.Builder;
-using ZChain.Hashers;
 
 namespace ZChain.Tests.UnitTests.Domain.BlockTests;
 
@@ -70,7 +69,7 @@ public class BlockTests
     public void WhenHavingAMinedBlock_AndAttemptingToRemine_ShouldThrow()
     {
         Should.Throw<InvalidOperationException>(() => _miner.MineBlock(_minedRootBlock));
-    }  
+    }
 
     [Fact]
     public void WhenHavingANewBlock_AndAttemptingToVerify_ShouldThrow()

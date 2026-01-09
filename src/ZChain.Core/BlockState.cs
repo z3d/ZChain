@@ -1,4 +1,4 @@
-﻿namespace ZChain.Core;
+namespace ZChain.Core;
 
 public enum BlockState
 {
