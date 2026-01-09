@@ -5,140 +5,254 @@ A .NET-based blockchain implementation with Proof-of-Work mining, built for lear
 ## Quick Reference
 
 ```bash
-# Format code
-dotnet format src/ZChain.sln
-
-# Build
-dotnet build src/ZChain.sln
-
-# Test
-dotnet test src/ZChain.sln
-
-# Run benchmarks (Release mode required)
-dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.PerformanceTesting.csproj
-
-# Run console demo
-dotnet run --project src/ZChain.ConsoleApp/ZChain.ConsoleApp.csproj
+dotnet format src/ZChain.sln           # Format code
+dotnet build src/ZChain.sln            # Build (warnings = errors)
+dotnet test src/ZChain.sln             # Run all tests
+dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.PerformanceTesting.csproj  # Benchmarks
 ```
 
 ## Pre-Commit Checklist
 
-Before every commit:
-
-1. `dotnet format src/ZChain.sln` - Apply formatting standards
-2. `dotnet build src/ZChain.sln` - Verify compilation (warnings are errors)
+1. `dotnet format src/ZChain.sln` - Apply formatting
+2. `dotnet build src/ZChain.sln` - Verify compilation
 3. `dotnet test src/ZChain.sln` - All tests must pass
 
 ## Architecture
 
 ```
-src/
-├── ZChain.Core/           # Domain models, interfaces, builders
-├── ZChain.CpuMiner/       # Multi-threaded CPU mining implementation
-├── ZChain.Hashers/        # SHA256 hashing (IHasher implementations)
-├── ZChain.Tests/          # xUnit tests (unit + integration)
-├── ZChain.ConsoleApp/     # Demo application
-└── ZChain.PerformanceTesting/  # BenchmarkDotNet suite
+                    ┌─────────────────┐
+                    │   ZChain.Core   │
+                    │  (Domain Layer) │
+                    └────────┬────────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                ▼
+    ┌───────────────┐ ┌─────────────┐ ┌───────────────────┐
+    │ ZChain.Hashers│ │ZChain.CpuMiner│ │   (Future miners)  │
+    └───────────────┘ └─────────────┘ └───────────────────┘
+            │                │
+            └────────┬───────┘
+                     │
+    ┌────────────────┼────────────────┐
+    ▼                ▼                ▼
+┌─────────┐  ┌──────────────┐  ┌─────────────────────┐
+│  Tests  │  │  ConsoleApp  │  │ PerformanceTesting  │
+└─────────┘  └──────────────┘  └─────────────────────┘
+```
+
+### Block<T> State Machine
+
+```
+    ┌─────┐
+    │ New │ ───────────────────────────────────────┐
+    └──┬──┘                                        │
+       │ BeginMining()                             │
+       ▼                                           │
+  ┌────────┐                                       │
+  │ Mining │                                       │
+  └───┬────┘                                       │
+      │ SetMinedValues(hash, nonce)                │
+      ▼                                            │
+  ┌───────┐                                        │
+  │ Mined │ ───► Verify() validates integrity     │
+  └───────┘                                        │
+                                                   │
+  Invalid transitions throw BlockStateException ◄──┘
 ```
 
 ### Core Components
 
 - **Block<T>**: Generic block with state machine (New → Mining → Mined)
 - **CpuMiner<T>**: Multi-threaded PoW miner with cancellation support
-- **BlockBuilder<T>**: Fluent API for block construction
+- **BlockBuilder<T>**: Fluent API enforcing required dependencies at compile time
 - **IHasher/IMiner<T>**: Abstractions for hashing and mining strategies
-
-### Key Design Decisions
-
-- Generic transaction type `T` allows any payload in blocks
-- Thread-first-wins mining race with proper cancellation
-- Builder pattern enforces required dependencies at compile time
-- State machine prevents invalid block operations
 
 ## Code Style
 
-Enforced via `.editorconfig`:
+Enforced via `.editorconfig`. Key rules:
 
-- **Line length**: 180 characters max
-- **Indentation**: 4 spaces
+- **Line length**: 180 chars max
 - **Namespaces**: File-scoped required (`namespace Foo;`)
-- **Usings**: Outside namespace, System first
-- **Security**: Analyzer diagnostics treated as errors
+- **Security**: Analyzer diagnostics as errors
 
-### Prohibited Patterns
+### Prohibited
 
-- ❌ Code regions (`#region`) - use smaller classes instead
-- ❌ Historical/commented-out code - use git history
-- ❌ XML documentation comments in application code
-- ❌ `var` when type isn't apparent from context
+- ❌ `#region` blocks - use smaller classes
+- ❌ Commented-out code - use git history
+- ❌ XML doc comments - self-documenting code
+- ❌ `var` when type isn't obvious
 
-### Required Patterns
+### Required
 
 - ✅ File-scoped namespaces
 - ✅ Primary constructors for simple DI
-- ✅ Expression-bodied members for single-line implementations
 - ✅ Pattern matching over type checks
-- ✅ Nullable reference types in new code
+- ✅ `ArgumentNullException.ThrowIfNull()` for validation
+
+### var Usage
+
+```csharp
+// GOOD: Type is obvious
+var items = new List<string>();
+var block = new Block<Transaction>();
+
+// BAD: Use explicit type
+string result = GetResult();
+IHasher hasher = CreateHasher();
+```
 
 ## Testing
 
-- **Framework**: xUnit with Shouldly assertions
-- **Unit tests**: `src/ZChain.Tests/UnitTests/` - isolated with stubs
-- **Integration tests**: `src/ZChain.Tests/Integration/` - full workflows
-- **Stubs**: `StubMiner<T>`, `StubHasher` for deterministic behavior
+Framework: xUnit + Shouldly | Location: `src/ZChain.Tests/`
 
-### Test Naming Convention
+### Naming Convention
 
 ```csharp
 [Fact]
 public void WhenCondition_AndContext_ShouldExpectedBehavior()
 ```
 
-### Running Tests
+### Structure (Arrange-Act-Assert)
+
+```csharp
+[Fact]
+public void WhenCreatingBlock_WithValidData_ShouldSucceed()
+{
+    // Arrange
+    var hasher = new StubHasher();
+    var transaction = new MoneyTransferTransaction("A", "B", 100);
+
+    // Act
+    var block = new BlockBuilder<MoneyTransferTransaction>()
+        .WithTransaction(transaction)
+        .WithHasher(hasher)
+        .Build();
+
+    // Assert
+    block.State.ShouldBe(BlockState.New);
+}
+```
+
+### Assertions
+
+```csharp
+// Prefer Shouldly
+block.State.ShouldBe(BlockState.Mined);
+block.Hash.ShouldStartWith("0000");
+Should.Throw<BlockStateException>(() => block.Mine());
+```
+
+### Stubs Over Mocks
+
+Use `StubHasher`, `StubMiner<T>` - avoid mocking frameworks.
+
+## Extension Points
+
+### Adding New Hasher
+
+```csharp
+// In ZChain.Hashers
+public class Sha3Hasher : IHasher
+{
+    public string ComputeHash(string input) { /* impl */ }
+}
+```
+
+### Adding New Miner
+
+```csharp
+// In ZChain.CpuMiner or new project
+public class GpuMiner<T> : IMiner<T> where T : class
+{
+    public async Task MineBlock(Block<T> block) { /* impl */ }
+}
+```
+
+### Adding New Transaction Type
+
+```csharp
+public record NftTransfer(string TokenId, string From, string To);
+
+var block = new BlockBuilder<NftTransfer>()
+    .WithTransaction(new NftTransfer("token1", "alice", "bob"))
+    .WithHasher(hasher)
+    .Build();
+```
+
+## Git Workflow
+
+### Branch Naming
+
+```
+feature/description    # New functionality
+fix/description        # Bug fixes
+chore/description      # Dependencies, config
+```
+
+### Commit Format
+
+```
+Short summary in imperative mood (50 chars)
+
+Optional body explaining "why" not "what".
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+### PR Template
+
+```markdown
+## Summary
+- Change 1
+- Change 2
+
+## Test plan
+- [x] Unit tests pass
+- [x] Integration tests pass
+
+Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+### Common Operations
 
 ```bash
-# All tests
-dotnet test src/ZChain.sln
+# Start new work
+git checkout main && git pull
+git checkout -b feature/my-feature
 
-# Specific test class
-dotnet test --filter "FullyQualifiedName~BlockTests"
+# Create PR
+gh pr create --title "Add feature" --body "## Summary..."
 
-# With detailed output
-dotnet test --verbosity normal
+# After merge
+git checkout main && git pull
+git branch -d feature/my-feature
 ```
 
 ## Performance Benchmarking
 
-Uses BenchmarkDotNet 0.14.0 (pinned - 0.15.x showed 5-34% variance vs 1-21%).
+BenchmarkDotNet 0.14.0 (pinned - 0.15.x showed high variance)
 
-Parameters:
 - **ThreadCount**: 1, 2, 3, 10
-- **Difficulty**: 1, 2, 3 (leading zeros in hash)
-
-Results: `BenchmarkDotNet.Artifacts/results/`
-
-Healthy variance: <25%. Higher indicates environmental issues.
+- **Difficulty**: 1, 2, 3 (leading zeros)
+- **Results**: `BenchmarkDotNet.Artifacts/results/`
+- **Healthy variance**: <25%
 
 ## Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| Newtonsoft.Json | Block serialization/deserialization |
-| BenchmarkDotNet 0.14.0 | Performance measurement (pinned) |
-| xunit 2.9.3 | Unit testing |
-| Shouldly | BDD-style assertions |
+| Newtonsoft.Json | Block serialization |
+| BenchmarkDotNet 0.14.0 | Performance measurement |
+| xunit + Shouldly | Testing |
 
-## Git Workflow
+## Files to Never Commit
 
-- Branch naming: `feature/`, `fix/`, `chore/` prefixes
-- PRs target `main` branch
-- Squash merge to keep history clean
-- CodeRabbit reviews enabled
-- GitHub Actions: build + test on PR, CodeQL security scanning
+- `BenchmarkDotNet.Artifacts/` - Machine-specific
+- `*.user`, `.vs/`, `bin/`, `obj/`
 
-## Import References
+## Repository Config
 
-- @src/ZChain.Core/Block.cs - Core block implementation
-- @src/ZChain.CpuMiner/CpuMiner.cs - Mining logic
-- @.github/workflows/dotnet.yml - CI pipeline
-- @.editorconfig - Code style rules
+```bash
+git config user.name "z3d"
+git config user.email "925699+z3d@users.noreply.github.com"
+```
