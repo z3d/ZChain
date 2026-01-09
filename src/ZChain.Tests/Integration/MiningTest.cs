@@ -1,13 +1,14 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Shouldly;
 using Xunit;
 using ZChain.Core;
-using ZChain.CpuMiner;
 using ZChain.Core.Builder;
+using ZChain.CpuMiner;
 using ZChain.Hashers;
 
 namespace ZChain.Tests.Integration;
+
 public class MiningTest
 {
     [Theory]

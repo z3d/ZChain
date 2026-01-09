@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using ZChain.Core;
-using ZChain.CpuMiner;
 using ZChain.Core.Builder;
+using ZChain.CpuMiner;
 using ZChain.Hashers;
 
 namespace ZChain.PerformanceTesting;

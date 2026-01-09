@@ -5,18 +5,29 @@ A .NET-based blockchain implementation with Proof-of-Work mining, built for lear
 ## Quick Reference
 
 ```bash
+# Format code
+dotnet format src/ZChain.sln
+
 # Build
 dotnet build src/ZChain.sln
 
 # Test
 dotnet test src/ZChain.sln
 
-# Run benchmarks (from solution root)
+# Run benchmarks (Release mode required)
 dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.PerformanceTesting.csproj
 
 # Run console demo
 dotnet run --project src/ZChain.ConsoleApp/ZChain.ConsoleApp.csproj
 ```
+
+## Pre-Commit Checklist
+
+Before every commit:
+
+1. `dotnet format src/ZChain.sln` - Apply formatting standards
+2. `dotnet build src/ZChain.sln` - Verify compilation (warnings are errors)
+3. `dotnet test src/ZChain.sln` - All tests must pass
 
 ## Architecture
 
@@ -44,55 +55,84 @@ src/
 - Builder pattern enforces required dependencies at compile time
 - State machine prevents invalid block operations
 
-## Code Conventions
+## Code Style
 
-- **Framework**: .NET 10.0 (LTS)
-- **Style**: File-scoped namespaces, primary constructors where appropriate
-- **Nullability**: Enabled in newer projects (ZChain.Hashers)
-- **Warnings**: Treated as errors in both Debug and Release
-- **Assertions**: Shouldly for BDD-style test assertions
+Enforced via `.editorconfig`:
 
-### Naming
+- **Line length**: 180 characters max
+- **Indentation**: 4 spaces
+- **Namespaces**: File-scoped required (`namespace Foo;`)
+- **Usings**: Outside namespace, System first
+- **Security**: Analyzer diagnostics treated as errors
 
-- PascalCase: Classes, methods, properties, public members
-- camelCase: Private fields, local variables, parameters
-- Prefix interfaces with `I` (e.g., `IHasher`, `IMiner<T>`)
+### Prohibited Patterns
+
+- ❌ Code regions (`#region`) - use smaller classes instead
+- ❌ Historical/commented-out code - use git history
+- ❌ XML documentation comments in application code
+- ❌ `var` when type isn't apparent from context
+
+### Required Patterns
+
+- ✅ File-scoped namespaces
+- ✅ Primary constructors for simple DI
+- ✅ Expression-bodied members for single-line implementations
+- ✅ Pattern matching over type checks
+- ✅ Nullable reference types in new code
 
 ## Testing
 
-- **Unit tests**: `src/ZChain.Tests/UnitTests/` - isolated component tests with stubs
-- **Integration tests**: `src/ZChain.Tests/Integration/` - full mining workflows
-- **Stubs**: `StubMiner<T>`, `StubHasher` for deterministic test behavior
+- **Framework**: xUnit with Shouldly assertions
+- **Unit tests**: `src/ZChain.Tests/UnitTests/` - isolated with stubs
+- **Integration tests**: `src/ZChain.Tests/Integration/` - full workflows
+- **Stubs**: `StubMiner<T>`, `StubHasher` for deterministic behavior
 
-Run specific test:
+### Test Naming Convention
+
+```csharp
+[Fact]
+public void WhenCondition_AndContext_ShouldExpectedBehavior()
+```
+
+### Running Tests
+
 ```bash
+# All tests
+dotnet test src/ZChain.sln
+
+# Specific test class
 dotnet test --filter "FullyQualifiedName~BlockTests"
+
+# With detailed output
+dotnet test --verbosity normal
 ```
 
 ## Performance Benchmarking
 
-Uses BenchmarkDotNet 0.14.0 (pinned for measurement stability - 0.15.x showed 5-34% variance).
+Uses BenchmarkDotNet 0.14.0 (pinned - 0.15.x showed 5-34% variance vs 1-21%).
 
-Benchmark parameters:
+Parameters:
 - **ThreadCount**: 1, 2, 3, 10
 - **Difficulty**: 1, 2, 3 (leading zeros in hash)
 
-Results saved to: `BenchmarkDotNet.Artifacts/results/`
+Results: `BenchmarkDotNet.Artifacts/results/`
 
-Expected variance with 0.14.0: 1-21% across runs. Higher variance indicates environmental issues.
+Healthy variance: <25%. Higher indicates environmental issues.
 
 ## Dependencies
 
 | Package | Purpose |
 |---------|---------|
 | Newtonsoft.Json | Block serialization/deserialization |
-| BenchmarkDotNet | Performance measurement |
-| xunit + Shouldly | Testing framework |
+| BenchmarkDotNet 0.14.0 | Performance measurement (pinned) |
+| xunit 2.9.3 | Unit testing |
+| Shouldly | BDD-style assertions |
 
 ## Git Workflow
 
 - Branch naming: `feature/`, `fix/`, `chore/` prefixes
 - PRs target `main` branch
+- Squash merge to keep history clean
 - CodeRabbit reviews enabled
 - GitHub Actions: build + test on PR, CodeQL security scanning
 
@@ -101,3 +141,4 @@ Expected variance with 0.14.0: 1-21% across runs. Higher variance indicates envi
 - @src/ZChain.Core/Block.cs - Core block implementation
 - @src/ZChain.CpuMiner/CpuMiner.cs - Mining logic
 - @.github/workflows/dotnet.yml - CI pipeline
+- @.editorconfig - Code style rules

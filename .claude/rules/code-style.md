@@ -1,61 +1,149 @@
 # Code Style Guidelines
 
+Enforced via `.editorconfig` - run `dotnet format src/ZChain.sln` before commits.
+
+## Formatting Standards
+
+- **Line length**: 180 characters maximum
+- **Indentation**: 4 spaces (2 for JSON/YAML/XML)
+- **Final newline**: Required in all files
+- **Trailing whitespace**: Trimmed automatically
+
 ## C# Conventions
+
+### Required (Warnings)
+
+```csharp
+// File-scoped namespaces - REQUIRED
+namespace ZChain.Core;
+
+// Usings outside namespace, System first
+using System;
+using System.Threading;
+using Newtonsoft.Json;
+```
 
 ### Modern C# Features (Prefer)
 
-- File-scoped namespaces: `namespace ZChain.Core;`
-- Primary constructors for simple DI: `public class Foo(IDep dep)`
-- Target-typed new: `Block<T> block = new();`
-- Pattern matching in conditionals
-- Expression-bodied members for single-line implementations
-
-### Avoid
-
-- Traditional namespace blocks with braces (legacy style)
-- `var` when type isn't obvious from context
-- Regions (`#region`) - use smaller classes instead
-- Commented-out code - delete it, git has history
-
-## Project Structure
-
-### New Classes
-
-Place in appropriate project:
-- Domain models/interfaces → `ZChain.Core`
-- Mining implementations → `ZChain.CpuMiner`
-- Hashing algorithms → `ZChain.Hashers`
-- Tests mirror source structure in `ZChain.Tests`
-
-### Builders
-
-Use fluent builder pattern for complex object construction:
 ```csharp
-var block = new BlockBuilder<Transaction>()
-    .WithPreviousBlock(parent)
-    .WithTransaction(tx)
-    .WithDifficulty(3)
-    .WithHasher(hasher)
-    .Build();
+// Primary constructors for simple DI
+public class CpuMiner<T>(IHasher hasher, int threadCount) : IMiner<T>
+
+// Expression-bodied members for single lines
+public string Hash => _hash;
+public bool IsValid() => Hash.StartsWith(new string('0', Difficulty));
+
+// Pattern matching
+if (state is BlockState.Mined)
+return obj switch { null => "none", string s => s, _ => obj.ToString() };
+
+// Target-typed new
+Block<Transaction> block = new();
+List<string> items = [];
+
+// Null coalescing and propagation
+var name = user?.Profile?.Name ?? "Unknown";
 ```
+
+### Prohibited Patterns
+
+| Pattern | Reason | Alternative |
+|---------|--------|-------------|
+| `#region` blocks | Hides code complexity | Smaller, focused classes |
+| Commented-out code | Clutters codebase | Git history |
+| `// TODO` without issue | Never gets done | Create GitHub issue |
+| XML doc comments | Not a public library | Self-documenting code |
+| `var` with unclear type | Reduces readability | Explicit type |
+| Historical change comments | Noise | Git blame |
+
+### var Usage
+
+```csharp
+// GOOD: Type is obvious
+var items = new List<string>();
+var block = new Block<Transaction>();
+var dict = new Dictionary<string, int>();
+
+// BAD: Type is not obvious - use explicit type
+string result = GetResult();           // Not: var result = GetResult();
+IHasher hasher = CreateHasher();       // Not: var hasher = CreateHasher();
+Block<T> block = builder.Build();      // Not: var block = builder.Build();
+```
+
+## Project Organization
+
+### File Placement
+
+| Type | Location |
+|------|----------|
+| Domain models/interfaces | `ZChain.Core` |
+| Mining implementations | `ZChain.CpuMiner` |
+| Hashing algorithms | `ZChain.Hashers` |
+| Unit tests | `ZChain.Tests/UnitTests/Domain/{Component}Tests/` |
+| Integration tests | `ZChain.Tests/Integration/` |
+
+### Class Structure Order
+
+1. Constants and static fields
+2. Instance fields
+3. Constructors
+4. Properties
+5. Public methods
+6. Private methods
 
 ## Error Handling
 
-- Throw `ArgumentNullException` for null parameters in public APIs
-- Throw `ArgumentOutOfRangeException` for invalid numeric ranges
-- Use domain-specific exceptions (e.g., `BlockStateException`) for business rule violations
+### Validation
+
+```csharp
+// Use ThrowIf methods (modern .NET)
+ArgumentNullException.ThrowIfNull(transaction);
+ArgumentOutOfRangeException.ThrowIfNegativeOrZero(difficulty);
+ArgumentException.ThrowIfNullOrWhiteSpace(hash);
+
+// Domain exceptions for business rules
+if (State != BlockState.New)
+    throw new BlockStateException($"Cannot mine block in {State} state");
+```
+
+### Exception Guidelines
+
+- Throw `ArgumentNullException` for null public parameters
+- Throw `ArgumentOutOfRangeException` for invalid ranges
+- Throw domain exceptions (`BlockStateException`) for business rules
 - Never catch and swallow exceptions silently
+- Include meaningful messages with context
 
 ## Async/Concurrency
 
-- Suffix async methods with `Async` only when sync overload exists
-- Always pass `CancellationToken` through async call chains
-- Use `Task.WhenAny` for racing operations, not `Task.WaitAny`
-- Dispose `CancellationTokenSource` properly
+```csharp
+// Pass CancellationToken through call chains
+public async Task MineBlock(Block<T> block, CancellationToken ct = default)
+{
+    await DoWork(ct);
+}
 
-## Documentation
+// Use Task.WhenAny for racing, not WaitAny
+Task winner = await Task.WhenAny(tasks);
 
-- XML docs only for public API surface intended for external consumption
-- Prefer self-documenting code over comments
-- Comments explain "why", not "what"
-- Keep README.md minimal - this is a learning project
+// Dispose CancellationTokenSource
+using var cts = new CancellationTokenSource();
+
+// Thread-safe state updates
+lock (_lock)
+{
+    if (State == BlockState.Mined) return;
+    _hash = hash;
+    State = BlockState.Mined;
+}
+```
+
+## Security Analyzers
+
+Security diagnostics are treated as **errors** in `.editorconfig`:
+
+```
+dotnet_analyzer_diagnostic.category-Security.severity = error
+```
+
+This means security issues will fail the build. Do not suppress these without review.
