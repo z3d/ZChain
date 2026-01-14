@@ -36,21 +36,23 @@ public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
 
     private static (string nonce, string hash) Mine(string hashStart, Block<T> block, CancellationToken cancellationToken)
     {
-        static string GenerateNonce() => Guid.NewGuid().ToString("N");
-        var hash = string.Empty;
+        int iterations = 0;
 
-        while (!hash.StartsWith(hashStart))
+        while (true)
         {
-            var nonce = GenerateNonce();
-            hash = block.CalculateHash(nonce);
+            string nonce = Guid.NewGuid().ToString("N");
+            string hash = block.CalculateHash(nonce);
 
-            cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
-            if (hash.StartsWith(hashStart))
+            if (hash.StartsWith(hashStart, StringComparison.Ordinal))
             {
                 return (nonce, hash);
             }
-        }
 
-        throw new InvalidOperationException("Unreachable code reached");
+            // Check cancellation every 64 iterations to reduce overhead
+            if (++iterations % 64 == 0)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
     }
 }
