@@ -12,7 +12,7 @@ dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.Performance
 
 Sweeps ThreadCount 1/2/3/10 against Difficulty 1/2/3 (leading zeros required in the hash). Output lands in `BenchmarkDotNet.Artifacts/results/` as a GitHub-flavoured markdown table, a CSV, and an HTML report — all machine-specific, none committed.
 
-Always benchmark before *and* after a change on the same machine in the same session. A number without its own baseline says nothing.
+Always benchmark before *and* after a change on the same machine in the same session. A number without its own baseline says nothing. Read the Traps in `AGENTS.md` first: the NuGet audit needs `NuGetAudit=false` in the environment, and a single row of the sweep can be a lucky draw.
 
 ## Reading the result
 
