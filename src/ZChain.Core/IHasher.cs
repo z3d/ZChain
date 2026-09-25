@@ -1,6 +1,9 @@
+using System;
+
 namespace ZChain.Core;
 
 public interface IHasher
 {
-    string ComputeHash(string input);
+    int HashSizeInBytes { get; }
+    void ComputeHash(ReadOnlySpan<byte> input, Span<byte> destination);
 }
