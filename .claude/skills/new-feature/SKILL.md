@@ -16,11 +16,11 @@ Most extensions are a new implementation of an existing interface, not a change 
 
 ## Constraints that aren't obvious
 
-**Hashers must be safe under concurrent mining.** `CpuMiner<T>` runs many threads against one hasher, so a hasher holding mutable state (a reused `HashAlgorithm` instance, a buffer field) will corrupt results non-deterministically rather than fail. Use a thread-static or a fresh instance per call.
+**Hashers must be allocation-free and safe under concurrent mining.** `IHasher.ComputeHash(ReadOnlySpan<byte>, Span<byte>)` runs millions of times a second across threads, so a per-call `new byte[]` or string shows up as gen0 pauses on every thread, and a hasher holding shared mutable state (one `HashAlgorithm` instance, a buffer field) corrupts results non-deterministically rather than failing. Keep state thread-static, as `Sha256Hasher` does.
 
 **Miners must honour cancellation.** `CpuMiner<T>` is cancellable so a losing thread stops the moment another finds the nonce. A miner that ignores its `CancellationToken` leaves threads burning after the block is mined.
 
-**Miners drive the state machine, they don't bypass it.** `block.BeginMining()`, find the nonce, `block.SetMinedValues(hash, nonce)`. Any other sequence throws `BlockStateException` — that is the design working, not an obstacle.
+**Miners drive the state machine, they don't bypass it.** `block.SetMiningBeginning()`, find a nonce for which `block.SatisfiesDifficulty(nonceBytes)` is true, `block.SetMinedValues(nonce, hash)`. Any other sequence throws `BlockStateException` — that is the design working, not an obstacle.
 
 **Don't modify `Block<T>` to add behaviour.** Compose: a wrapper, a decorator, or an extension method. The state machine is the one thing every other component trusts.
 

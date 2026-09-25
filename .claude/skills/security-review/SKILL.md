@@ -12,7 +12,7 @@ What actually goes wrong in this codebase, in rough order of severity.
 
 The hash must cover **every** field that defines the block — height, parent hash, transaction, nonce. A hash over the nonce alone (or over any proper subset) means two different blocks can share a hash, which collapses chain integrity. This is the highest-value thing to check on any change to hashing or block structure.
 
-SHA256 or stronger, never MD5/SHA1. Nonces must not be predictable, and anything security-sensitive uses `RandomNumberGenerator`, never `System.Random`.
+SHA256 or stronger, never MD5/SHA1. Nonces are plain counters and that is fine: Proof-of-Work gets its security from the hash, not from nonce secrecy. Anything genuinely security-sensitive uses `RandomNumberGenerator`, never `System.Random`.
 
 ## State machine and concurrency
 
