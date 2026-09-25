@@ -19,4 +19,19 @@ public class Sha256Hasher : IHasher
             throw new ArgumentException($"Destination must hold at least {HashSizeInBytes} bytes", nameof(destination));
         }
     }
+
+    public void ComputeHashes(ReadOnlySpan<byte> inputs, int inputLength, Span<byte> destinations)
+    {
+        if (Sha256Vector8.IsSupported && inputs.Length == inputLength * Sha256Vector8.Lanes)
+        {
+            Sha256Vector8.HashLanes(inputs, inputLength, destinations);
+            return;
+        }
+
+        int count = inputs.Length / inputLength;
+        for (int i = 0; i < count; i++)
+        {
+            ComputeHash(inputs.Slice(i * inputLength, inputLength), destinations.Slice(i * HashSizeInBytes, HashSizeInBytes));
+        }
+    }
 }
