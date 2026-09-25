@@ -1,0 +1,19 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "if": "Bash(git commit*)",
+            "timeout": 600,
+            "statusMessage": "Pre-commit: format, build, test",
+            "command": "if grep -q 'git commit'; then dotnet format src/ZChain.sln --verify-no-changes --no-restore && dotnet build src/ZChain.sln --no-restore && dotnet test src/ZChain.sln --no-build || exit 2; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

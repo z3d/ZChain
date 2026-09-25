@@ -11,7 +11,7 @@ dotnet test src/ZChain.sln
 dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.PerformanceTesting.csproj
 ```
 
-Format, build, and test before committing.
+Format, build, and test before committing. A `PreToolUse` hook in `.claude/settings.json` runs all three on every `git commit` and refuses the commit if any of them fails, so the checklist is enforced rather than asked for.
 
 ## Design
 
