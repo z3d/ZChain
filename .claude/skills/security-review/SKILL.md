@@ -6,150 +6,50 @@ allowed-tools: Read, Grep, Glob
 
 # Security Review
 
-Checklist for reviewing ZChain code for security issues.
+What actually goes wrong in this codebase, in rough order of severity.
 
-## Cryptographic Security
+## Hash input completeness
 
-### Hash Function Usage
+The hash must cover **every** field that defines the block — height, parent hash, transaction, nonce. A hash over the nonce alone (or over any proper subset) means two different blocks can share a hash, which collapses chain integrity. This is the highest-value thing to check on any change to hashing or block structure.
 
-- [ ] Using SHA256 (or stronger) - never MD5/SHA1
-- [ ] Hash inputs include all relevant block data
-- [ ] No predictable nonce generation
-- [ ] Proper hex encoding of hash output
+SHA256 or stronger, never MD5/SHA1. Nonces must not be predictable, and anything security-sensitive uses `RandomNumberGenerator`, never `System.Random`.
 
-```csharp
-// GOOD: All block data in hash
-var hashInput = $"{block.Height}{block.ParentHash}{block.Transaction}{nonce}";
+## State machine and concurrency
 
-// BAD: Missing fields allows hash collision attacks
-var hashInput = $"{nonce}";
-```
+`Block<T>`'s state machine is the integrity guarantee, and mining is multi-threaded, so the two interact. Check that a mined block can't be re-mined or mutated, an unmined block can't be verified, and — the subtle one — that the transition to `Mined` is **atomic under contention**. Many threads race to find a nonce; without a lock (or an interlocked equivalent), two winners can both write hash and nonce.
 
-### Random Number Generation
+Also check that `CancellationToken` is propagated through long-running mining loops and that `CancellationTokenSource` instances are disposed. A leaked-but-cancelled miner burns CPU silently.
 
-- [ ] Using cryptographically secure RNG for security-sensitive operations
-- [ ] Not using `System.Random` for cryptographic purposes
+## Deserialization
 
-```csharp
-// GOOD: Cryptographically secure
-using var rng = RandomNumberGenerator.Create();
-byte[] bytes = new byte[32];
-rng.GetBytes(bytes);
+`TypeNameHandling` on Newtonsoft.Json permits arbitrary type instantiation from untrusted input — treat any occurrence as Critical. Deserialize to an explicit closed generic (`Block<MoneyTransferTransaction>`), and validate what comes back rather than trusting it.
 
-// BAD: Predictable
-var random = new Random();
-```
+## Boundaries and exposure
 
-## Blockchain Integrity
+Null checks and range validation on public parameters (`ArgumentNullException.ThrowIfNull`, `ArgumentOutOfRangeException.ThrowIfNegativeOrZero(difficulty)`). No key material or sensitive state in logs, exception messages, debug output, or benchmark artifacts. JSON serialization shouldn't expose internal fields.
 
-### Block Validation
+Dependencies come from trusted sources, pinned to specific versions, with Dependabot alerts triaged rather than ignored.
 
-- [ ] Verify hash matches recorded values
-- [ ] Verify parent hash chain is intact
-- [ ] Verify difficulty requirement is met
-- [ ] Verify block state transitions are valid
-
-### State Machine Security
-
-- [ ] Cannot mine already-mined block
-- [ ] Cannot verify unmined block
-- [ ] Cannot modify mined block values
-- [ ] State transitions are thread-safe
-
-## Concurrency Issues
-
-### Thread Safety
-
-- [ ] Shared state protected by locks or concurrent collections
-- [ ] No race conditions in mining completion
-- [ ] CancellationToken properly propagated
-- [ ] Resources properly disposed
-
-```csharp
-// GOOD: Thread-safe mined value setting
-lock (_minedLock)
-{
-    if (State == BlockState.Mined) return;
-    _hash = hash;
-    _nonce = nonce;
-    State = BlockState.Mined;
-}
-```
-
-### Cancellation
-
-- [ ] Long-running operations check CancellationToken
-- [ ] CancellationTokenSource disposed after use
-- [ ] Graceful shutdown on cancellation
-
-## Input Validation
-
-### Public API Boundaries
-
-- [ ] Null checks on all public method parameters
-- [ ] Range validation on numeric inputs (difficulty > 0)
-- [ ] No SQL injection (if database added)
-- [ ] No command injection in Bash operations
-
-```csharp
-// GOOD: Proper validation
-public Block(T transaction, int difficulty)
-{
-    ArgumentNullException.ThrowIfNull(transaction);
-    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(difficulty);
-}
-```
-
-## Sensitive Data
-
-### Logging and Output
-
-- [ ] No private keys in logs
-- [ ] No sensitive data in exception messages
-- [ ] Debug output doesn't expose internal state
-- [ ] Benchmark results don't contain sensitive info
-
-### Serialization
-
-- [ ] JSON serialization doesn't expose internal fields
-- [ ] Deserialization validates input
-- [ ] No arbitrary type instantiation (TypeNameHandling)
-
-```csharp
-// BAD: Allows arbitrary type instantiation
-JsonConvert.DeserializeObject<Block>(json, new JsonSerializerSettings {
-    TypeNameHandling = TypeNameHandling.All  // DANGEROUS
-});
-
-// GOOD: Explicit type, no type handling
-JsonConvert.DeserializeObject<Block<MoneyTransferTransaction>>(json);
-```
-
-## Dependency Security
-
-- [ ] NuGet packages from trusted sources
-- [ ] No known vulnerabilities (check GitHub Dependabot)
-- [ ] Packages pinned to specific versions
-- [ ] Regular dependency updates
-
-## Review Commands
+## Fast scan
 
 ```bash
-# Search for potential issues
-grep -r "Random()" src/
-grep -r "MD5\|SHA1" src/
-grep -r "TypeNameHandling" src/
-grep -r "Process.Start\|Shell" src/
-
-# Check for hardcoded secrets
-grep -r "password\|secret\|key\|token" src/ --include="*.cs"
+grep -rn "Random()" src/
+grep -rn "MD5\|SHA1" src/
+grep -rn "TypeNameHandling" src/
+grep -rn "Process.Start\|Shell" src/
+grep -rn "password\|secret\|key\|token" src/ --include="*.cs"
 ```
 
-## Severity Levels
+Grep finds candidates, not findings — confirm each by reading the surrounding code before reporting it.
 
-| Level | Description | Action |
-|-------|-------------|--------|
-| Critical | Exploitable vulnerability | Block merge, fix immediately |
-| High | Security weakness | Should fix before merge |
-| Medium | Defense in depth issue | Track for future fix |
-| Low | Best practice deviation | Note in review |
+## Severity
+
+**Critical** — exploitable now (arbitrary type instantiation, an incomplete hash input). Block the merge.
+**High** — a real weakness needing a specific precondition (a racy state transition). Fix before merge.
+**Medium** — defense in depth. Track it.
+**Low** — best-practice deviation. Note it.
+
+## Related skills
+
+- `new-feature` — the constraints new hashers and miners must satisfy
+- `pr-workflow` — where review sits in the merge process

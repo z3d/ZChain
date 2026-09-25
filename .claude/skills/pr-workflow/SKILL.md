@@ -6,88 +6,25 @@ allowed-tools: Bash, Read, Glob
 
 # Pull Request Workflow
 
-Complete workflow for creating branches, commits, and PRs in ZChain.
+Branch off an up-to-date `main` as `feature/`, `fix/`, `chore/`, or `refactor/` + a short description.
 
-## Branch Creation
-
-```bash
-# Ensure on latest main
-git checkout main
-git pull origin main
-
-# Create feature branch
-git checkout -b <type>/<description>
-```
-
-### Branch Types
-
-| Prefix | Use Case |
-|--------|----------|
-| `feature/` | New functionality |
-| `fix/` | Bug fixes |
-| `chore/` | Dependencies, config, maintenance |
-| `refactor/` | Code restructuring |
-
-## Making Changes
-
-### Before Committing
+**Before every commit**, in this order:
 
 ```bash
-# Build
-dotnet build src/ZChain.sln
-
-# Run tests
+dotnet format src/ZChain.sln
+dotnet build src/ZChain.sln    # warnings are errors, so this is a real gate
 dotnet test src/ZChain.sln
-
-# Check what changed
-git status
-git diff
 ```
 
-### Commit Message Format
+Commit messages are imperative mood, ~50-char summary, body explaining **why** rather than what, and:
 
 ```
-Short summary in imperative mood (50 chars max)
-
-Optional body explaining the "why" (wrap at 72 chars).
-
 Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
-### Good Commit Messages
+PR body:
 
-```bash
-# Feature
-git commit -m "Add multi-threaded mining support
-
-Implement parallel nonce search using Task.WhenAny.
-First thread to find valid hash wins and cancels others.
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-
-# Fix
-git commit -m "Fix block state validation in verification
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-
-# Chore
-git commit -m "Update NuGet packages to latest versions
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
-## Creating Pull Request
-
-### Push Branch
-
-```bash
-git push -u origin <branch-name>
-```
-
-### Create PR with GitHub CLI
-
-```bash
-gh pr create --title "Short description" --body "$(cat <<'EOF'
+```markdown
 ## Summary
 - Change 1
 - Change 2
@@ -98,68 +35,20 @@ gh pr create --title "Short description" --body "$(cat <<'EOF'
 - [ ] Manual testing (if applicable)
 
 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
 ```
 
-### PR Title Guidelines
+Include benchmark numbers in the PR description whenever the change touches mining, hashing, or concurrency — a performance claim without a before/after on the same machine isn't reviewable.
 
-- Use imperative mood: "Add feature" not "Added feature"
-- Be specific: "Add multi-threaded mining" not "Update miner"
-- Match primary commit message
+CodeRabbit reviews automatically; triage its Critical and High findings before merging. Merge with `gh pr merge <number> --squash` to keep `main` linear, then delete the local branch.
 
-## After PR Created
+This repo commits under a specific identity:
 
-### Address Review Comments
-
-CodeRabbit will automatically review. Address any:
-- Security concerns (Critical/High)
-- Regression risks
-- Code quality suggestions
-
-### Merge Strategy
-
-Use squash merge to keep main history clean:
-```bash
-gh pr merge <number> --squash
-```
-
-## Cleanup
-
-After merge:
-```bash
-git checkout main
-git pull
-git branch -d <branch-name>  # Delete local branch
-```
-
-## Quick Reference
-
-```bash
-# Full workflow
-git checkout main && git pull
-git checkout -b feature/my-feature
-
-# ... make changes ...
-
-dotnet build src/ZChain.sln
-dotnet test src/ZChain.sln
-git add .
-git commit -m "Add my feature
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-git push -u origin feature/my-feature
-gh pr create --title "Add my feature" --body "## Summary
-- Added feature
-
-## Test plan
-- [x] Tests pass"
-```
-
-## Repository Config
-
-User configuration for this repo:
 ```bash
 git config user.name "z3d"
 git config user.email "925699+z3d@users.noreply.github.com"
 ```
+
+## Related skills
+
+- `security-review` — the audit pass before merging crypto or concurrency changes
+- `benchmark` — producing the numbers a performance PR needs

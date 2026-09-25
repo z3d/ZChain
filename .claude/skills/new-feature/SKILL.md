@@ -6,133 +6,39 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 # Implementing New Features
 
-Step-by-step guide for adding functionality to ZChain.
+Most extensions are a new implementation of an existing interface, not a change to `ZChain.Core`. Read the nearest existing implementation before writing a new one.
 
-## Architecture Quick Reference
+| Adding | Goes in | Implements |
+|---|---|---|
+| Transaction type | the consuming project, or Core | nothing — it's the `T` in `Block<T>` |
+| Hash algorithm | `ZChain.Hashers` | `IHasher` |
+| Mining strategy | `ZChain.CpuMiner`, or a new project | `IMiner<T>` |
 
-```
-ZChain.Core        → Domain models, interfaces, builders
-ZChain.CpuMiner    → Mining implementations (IMiner<T>)
-ZChain.Hashers     → Hash algorithms (IHasher)
-ZChain.Tests       → Unit + integration tests
-```
+## Constraints that aren't obvious
 
-## Feature Types
+**Hashers must be safe under concurrent mining.** `CpuMiner<T>` runs many threads against one hasher, so a hasher holding mutable state (a reused `HashAlgorithm` instance, a buffer field) will corrupt results non-deterministically rather than fail. Use a thread-static or a fresh instance per call.
 
-### Adding a New Transaction Type
+**Miners must honour cancellation.** `CpuMiner<T>` is cancellable so a losing thread stops the moment another finds the nonce. A miner that ignores its `CancellationToken` leaves threads burning after the block is mined.
 
-1. Create record/class (can be in consuming project or Core):
-```csharp
-public record MyTransaction(string Field1, decimal Field2);
-```
+**Miners drive the state machine, they don't bypass it.** `block.BeginMining()`, find the nonce, `block.SetMinedValues(hash, nonce)`. Any other sequence throws `BlockStateException` — that is the design working, not an obstacle.
 
-2. Use with existing Block<T>:
-```csharp
-var block = new BlockBuilder<MyTransaction>()
-    .WithTransaction(new MyTransaction("value", 100m))
-    .WithHasher(new Sha256Hasher())
-    .Build();
-```
+**Don't modify `Block<T>` to add behaviour.** Compose: a wrapper, a decorator, or an extension method. The state machine is the one thing every other component trusts.
 
-### Adding a New Hasher
+**Don't add a required dependency as a runtime null check.** `BlockBuilder<T>`'s type-state chain makes missing dependencies a compile error; keep new requirements there.
 
-1. Create in `ZChain.Hashers`:
-```csharp
-namespace ZChain.Hashers;
+## Tests
 
-public class MyHasher : IHasher
-{
-    public string ComputeHash(string input)
-    {
-        // Implementation - return hex string
-    }
-}
-```
+Unit tests in `ZChain.Tests/UnitTests/Domain/{Feature}Tests/`, integration tests for a full mining workflow in `ZChain.Tests/Integration/` (`[Theory]` over difficulty and thread count is the established shape). xUnit + Shouldly, `WhenCondition_AndContext_ShouldExpectedBehavior`, Arrange-Act-Assert, stubs rather than mocks.
 
-2. Add tests in `ZChain.Tests/UnitTests/Domain/HasherTests/`
-
-3. Consider thread safety (use thread-static or new instance per call)
-
-### Adding a New Miner
-
-1. Create in `ZChain.CpuMiner` or new project:
-```csharp
-namespace ZChain.CpuMiner;
-
-public class MyMiner<T>(IHasher hasher, int config) : IMiner<T>
-    where T : class
-{
-    public async Task MineBlock(Block<T> block)
-    {
-        block.BeginMining();
-        // Mining logic - find hash matching difficulty
-        block.SetMinedValues(hash, nonce);
-    }
-}
-```
-
-2. Support CancellationToken for graceful shutdown
-3. Add integration tests in `ZChain.Tests/Integration/`
-
-### Extending Block<T>
-
-Avoid modifying Block<T> directly. Instead:
-- Create wrapper/decorator classes
-- Use composition over inheritance
-- Add extension methods for new behaviors
-
-## Test Requirements
-
-### Unit Tests (Required)
-
-Location: `ZChain.Tests/UnitTests/Domain/{Feature}Tests/`
-
-```csharp
-public class MyFeatureTests
-{
-    [Fact]
-    public void WhenCondition_AndContext_ShouldExpectedBehavior()
-    {
-        // Arrange
-        // Act
-        // Assert with Shouldly
-    }
-}
-```
-
-### Integration Tests (For workflows)
-
-Location: `ZChain.Tests/Integration/`
-
-```csharp
-[Theory]
-[InlineData(1, 1)]
-[InlineData(2, 2)]
-public async Task MyFeature_WithParameters_ShouldWork(int param1, int param2)
-{
-    // Full workflow test
-}
-```
-
-## Checklist
-
-- [ ] Code follows file-scoped namespace style
-- [ ] Public APIs have null checks (ArgumentNullException)
-- [ ] Async methods use CancellationToken where appropriate
-- [ ] Unit tests cover happy path and edge cases
-- [ ] Integration test for full workflow (if applicable)
-- [ ] Build passes with no warnings (`dotnet build`)
-- [ ] All tests pass (`dotnet test`)
-
-## Commands
+Cover the invalid-transition paths, not just the happy path — a new miner that can reach `SetMinedValues` twice is exactly the bug the state machine exists to catch.
 
 ```bash
-# Build and verify
 dotnet build src/ZChain.sln
-
-# Run tests
 dotnet test src/ZChain.sln
-
-# Run specific test class
 dotnet test --filter "FullyQualifiedName~MyFeatureTests"
 ```
+
+## Related skills
+
+- `security-review` — what to check before merging crypto or concurrency changes
+- `benchmark` — measuring a new miner or hasher against the pinned baseline
