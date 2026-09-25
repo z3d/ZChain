@@ -105,13 +105,38 @@ public class Block<T>
         return Convert.ToHexString(hash);
     }
 
-    public bool SatisfiesDifficulty(ReadOnlySpan<byte> nonce)
+    // Nonces are equal-length and stored back to back. Returns the index of the first nonce whose hash meets the difficulty, or -1.
+    // The hash input is the block bytes followed by the nonce, so a hasher can reuse the state of the constant prefix across nonces.
+    public int FindNonceSatisfyingDifficulty(ReadOnlySpan<byte> nonces, int nonceLength)
     {
-        Span<byte> hash = stackalloc byte[_hasher.HashSizeInBytes];
-        CalculateHash(nonce, hash);
+        int count = nonces.Length / nonceLength;
+        int inputLength = nonceLength + _blockBytes.Length;
+        int hashSize = _hasher.HashSizeInBytes;
+        Span<byte> inputs = inputLength * count <= 2048 ? stackalloc byte[inputLength * count] : new byte[inputLength * count];
+        Span<byte> hashes = hashSize * count <= 512 ? stackalloc byte[hashSize * count] : new byte[hashSize * count];
+        for (int i = 0; i < count; i++)
+        {
+            Span<byte> input = inputs.Slice(i * inputLength, inputLength);
+            _blockBytes.CopyTo(input);
+            nonces.Slice(i * nonceLength, nonceLength).CopyTo(input[_blockBytes.Length..]);
+        }
 
-        // Difficulty counts leading '0' hex characters, i.e. leading zero nibbles of the raw hash
-        for (int i = 0; i < Difficulty; i++)
+        _hasher.ComputeHashes(inputs, inputLength, hashes);
+        for (int i = 0; i < count; i++)
+        {
+            if (HasLeadingZeroNibbles(hashes.Slice(i * hashSize, hashSize), Difficulty))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    // Difficulty counts leading '0' hex characters, i.e. leading zero nibbles of the raw hash
+    private static bool HasLeadingZeroNibbles(ReadOnlySpan<byte> hash, int count)
+    {
+        for (int i = 0; i < count; i++)
         {
             int nibble = (i & 1) == 0 ? hash[i >> 1] >> 4 : hash[i >> 1] & 0xF;
             if (nibble != 0)
@@ -125,10 +150,10 @@ public class Block<T>
 
     private void CalculateHash(ReadOnlySpan<byte> nonce, Span<byte> destination)
     {
-        int inputLength = nonce.Length + _blockBytes.Length;
+        int inputLength = _blockBytes.Length + nonce.Length;
         Span<byte> input = inputLength <= 512 ? stackalloc byte[inputLength] : new byte[inputLength];
-        nonce.CopyTo(input);
-        _blockBytes.CopyTo(input[nonce.Length..]);
+        _blockBytes.CopyTo(input);
+        nonce.CopyTo(input[_blockBytes.Length..]);
         _hasher.ComputeHash(input, destination);
     }
 
