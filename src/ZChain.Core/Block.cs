@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace ZChain.Core;
@@ -9,7 +10,7 @@ public class Block<T>
     public const char DefaultBufferCharacter = '0';
     private readonly string _serializedTransaction;
     private readonly object _lockObject;
-    private readonly string _blockstring;
+    private readonly byte[] _blockBytes;
     private readonly IHasher _hasher;
 
     public Block<T> Parent { get; }
@@ -30,7 +31,7 @@ public class Block<T>
         Height = parent?.Height + 1 ?? 1;
         _serializedTransaction = JsonConvert.SerializeObject(recordedTransaction);
         _lockObject = new object();
-        _blockstring = Height + Parent?.Hash + _serializedTransaction + Difficulty;
+        _blockBytes = Encoding.UTF8.GetBytes(Height + Parent?.Hash + _serializedTransaction + Difficulty);
         _hasher = hasher ?? throw new ArgumentNullException(nameof(hasher));
 
         if (difficulty <= 0)
@@ -99,8 +100,36 @@ public class Block<T>
 
     public string CalculateHash(string nonce)
     {
-        var blockToHash = nonce + _blockstring;
-        return _hasher.ComputeHash(blockToHash);
+        Span<byte> hash = stackalloc byte[_hasher.HashSizeInBytes];
+        CalculateHash(Encoding.UTF8.GetBytes(nonce), hash);
+        return Convert.ToHexString(hash);
+    }
+
+    public bool SatisfiesDifficulty(ReadOnlySpan<byte> nonce)
+    {
+        Span<byte> hash = stackalloc byte[_hasher.HashSizeInBytes];
+        CalculateHash(nonce, hash);
+
+        // Difficulty counts leading '0' hex characters, i.e. leading zero nibbles of the raw hash
+        for (int i = 0; i < Difficulty; i++)
+        {
+            int nibble = (i & 1) == 0 ? hash[i >> 1] >> 4 : hash[i >> 1] & 0xF;
+            if (nibble != 0)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void CalculateHash(ReadOnlySpan<byte> nonce, Span<byte> destination)
+    {
+        int inputLength = nonce.Length + _blockBytes.Length;
+        Span<byte> input = inputLength <= 512 ? stackalloc byte[inputLength] : new byte[inputLength];
+        nonce.CopyTo(input);
+        _blockBytes.CopyTo(input[nonce.Length..]);
+        _hasher.ComputeHash(input, destination);
     }
 
     public string SerializeToJson()

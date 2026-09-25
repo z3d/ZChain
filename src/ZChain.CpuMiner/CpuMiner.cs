@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using ZChain.Core;
@@ -13,14 +14,13 @@ public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
     public async Task MineBlock(Block<T> blockToMine)
     {
         using var cancellationTokenSource = new CancellationTokenSource();
-        var targetHashStart = new string(Block<T>.DefaultBufferCharacter, blockToMine.Difficulty);
-
         var tasks = new List<Task<(string, string)>>();
 
         blockToMine.SetMiningBeginning();
         for (int i = 0; i < _numberOfThreads; i++)
         {
-            var task = Task.Run(() => Mine(targetHashStart, blockToMine, cancellationTokenSource.Token));
+            int firstNonce = i;
+            var task = Task.Run(() => Mine(blockToMine, firstNonce, _numberOfThreads, cancellationTokenSource.Token));
             tasks.Add(task);
         }
 
@@ -34,23 +34,21 @@ public class CpuMiner<T>(int numberOfThreads) : IMiner<T>
         blockToMine.SetMinedValues(nonce, hash);
     }
 
-    private static (string nonce, string hash) Mine(string hashStart, Block<T> block, CancellationToken cancellationToken)
+    private static (string nonce, string hash) Mine(Block<T> block, long firstNonce, int nonceStep, CancellationToken cancellationToken)
     {
-        static string GenerateNonce() => Guid.NewGuid().ToString("N");
-        var hash = string.Empty;
-
-        while (!hash.StartsWith(hashStart))
+        // Each thread walks its own interleaved nonce sequence, so no two threads ever hash the same candidate.
+        // The loop allocates nothing; strings are only built for the winning nonce.
+        Span<byte> nonceBytes = stackalloc byte[20];
+        for (long nonce = firstNonce; ; nonce += nonceStep)
         {
-            var nonce = GenerateNonce();
-            hash = block.CalculateHash(nonce);
+            cancellationToken.ThrowIfCancellationRequested();
 
-            cancellationToken.ThrowIfCancellationRequested(); // This is the standard way to cancel immediately
-            if (hash.StartsWith(hashStart))
+            nonce.TryFormat(nonceBytes, out int nonceLength, provider: CultureInfo.InvariantCulture);
+            if (block.SatisfiesDifficulty(nonceBytes[..nonceLength]))
             {
-                return (nonce, hash);
+                string nonceString = nonce.ToString(CultureInfo.InvariantCulture);
+                return (nonceString, block.CalculateHash(nonceString));
             }
         }
-
-        throw new InvalidOperationException("Unreachable code reached");
     }
 }

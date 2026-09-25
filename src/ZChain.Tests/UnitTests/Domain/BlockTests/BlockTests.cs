@@ -10,7 +10,7 @@ namespace ZChain.Tests.UnitTests.Domain.BlockTests;
 public class BlockTests
 {
     private const string TestNonce = "TEST_NONCE";
-    private const string TestHash = "0000TEST_HASH";
+    private const string TestHash = "00007E57";
     private const string FromAddress1 = "First_Address";
     private const string FromAddress2 = "Second_Address";
     private const string ToAddress1 = "Second_Address";
@@ -42,10 +42,11 @@ public class BlockTests
 
     class StubHasher : IHasher
     {
-        public string ComputeHash(string input)
+        public int HashSizeInBytes => TestHash.Length / 2;
+
+        public void ComputeHash(ReadOnlySpan<byte> input, Span<byte> destination)
         {
-            // Return a predictable hash value for testing purposes
-            return TestHash;
+            Convert.FromHexString(TestHash).CopyTo(destination);
         }
     }
 
