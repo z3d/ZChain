@@ -41,14 +41,13 @@ xUnit + Shouldly in `src/ZChain.Tests/`. Names read `WhenCondition_AndContext_Sh
 
 BenchmarkDotNet is **pinned to 0.14.0** — 0.15.x showed high variance and made results incomparable. Don't bump it without re-establishing a baseline.
 
-Runs sweep ThreadCount 1/2/3/10 against difficulty 1/2/3 (leading zeros). Results land in `BenchmarkDotNet.Artifacts/results/`, which is machine-specific and never committed. Variance above ~25% means the run is untrustworthy, not that the change was slow.
+Mining is a lottery, so the suite does not time block mining. `HashRate` pushes a fixed 61,440 nonces per operation through `Block<T>.FindNonceSatisfyingDifficulty` against an unreachable difficulty, split across ThreadCount 1/2/3/10, and reports **nanoseconds per hash**. Results land in `BenchmarkDotNet.Artifacts/results/`, which is machine-specific and never committed. Variance above ~25% means the run is untrustworthy, not that the change was slow.
 
 ## Traps
 
 Each of these cost real time, and none shows up in a diff.
 
 - **NuGet audit fails on this machine.** The global NuGet config lists a private Azure feed that is unreachable, and `NU1900` is a warning-as-error, so every restore fails. Set `NuGetAudit=false` as an environment variable, not as a `-p:` switch — BenchmarkDotNet spawns its own build, which only inherits the environment.
-- **A single benchmark row can be a lucky draw.** Nonces are deterministic, so BenchmarkDotNet's fixed block always finds the same winner and one parameter row may sit far from the expected work. Compare the whole sweep, or measure hash rate with a harness that chains many random blocks.
 - **GitHub disables the CodeQL workflow after 60 days without activity**, and the code-scanning ruleset then blocks every PR, including docs-only ones. `gh workflow enable codeql.yml`, then close and reopen the PR to retrigger the scan.
 - **Ten threads is not ten cores.** This box is 4 physical cores with hyperthreading; SHA-256 throughput caps around 4–5x however many threads you add. Read `ThreadCount=10` results against that ceiling.
 - **This laptop throttles.** An i7-10510U under sustained AVX2 load swings between 0.8 and 4.9 GHz, so absolute numbers move 2–3x between runs minutes apart. Only a before/after interleaved in the same run is comparable; never compare against a number from an earlier session.
