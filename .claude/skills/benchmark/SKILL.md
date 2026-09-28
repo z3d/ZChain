@@ -10,9 +10,9 @@ allowed-tools: Read, Bash, Glob, Grep
 dotnet run -c Release --project src/ZChain.PerformanceTesting/ZChain.PerformanceTesting.csproj
 ```
 
-Sweeps ThreadCount 1/2/3/10 against Difficulty 1/2/3 (leading zeros required in the hash). Output lands in `BenchmarkDotNet.Artifacts/results/` as a GitHub-flavoured markdown table, a CSV, and an HTML report — all machine-specific, none committed.
+`HashRate` hashes a fixed 61,440 nonces per operation through the miner's path against an unreachable difficulty, across ThreadCount 1/2/3/10, and reports nanoseconds per hash (`OperationsPerInvoke` does the division). It deliberately does not time block mining: that is a lottery draw, and a change that moves the winning nonce shows up as a fake speedup or slowdown. Output lands in `BenchmarkDotNet.Artifacts/results/` as a GitHub-flavoured markdown table, a CSV, and an HTML report — all machine-specific, none committed.
 
-Always benchmark before *and* after a change on the same machine in the same session. A number without its own baseline says nothing. Read the Traps in `AGENTS.md` first: the NuGet audit needs `NuGetAudit=false` in the environment, and a single row of the sweep can be a lucky draw.
+Always benchmark before *and* after a change on the same machine in the same session. A number without its own baseline says nothing. Read the Traps in `AGENTS.md` first: the NuGet audit needs `NuGetAudit=false` in the environment, and this laptop throttles between runs.
 
 ## Reading the result
 

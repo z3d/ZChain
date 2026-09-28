@@ -7,7 +7,7 @@ public static class Program
 {
     public static void Main()
     {
-        BenchmarkRunner.Run<MiningSpeed>();
+        BenchmarkRunner.Run<HashRate>();
         Console.ReadLine();
     }
 }
