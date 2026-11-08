@@ -32,3 +32,6 @@ project.lock.json
 
 # Benchmark artifacts
 BenchmarkDotNet.Artifacts/
+
+# Claude Code per-user settings (approved commands can carry secrets)
+.claude/settings.local.json
